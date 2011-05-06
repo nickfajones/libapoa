@@ -19,6 +19,7 @@ namespace apoa
 {
 
 //#############################################################################
+#ifdef __linux__
 struct basic_siginfo
   {
   uint32_t  bsi_signo;
@@ -42,6 +43,31 @@ struct basic_siginfo
   
   uint8_t   bsi_pad[44];
   };
+
+#else ifdef __APPLE__
+
+union basic_sigval
+  {
+  int bsi_sival_int;
+  void* bsi_sival_ptr;
+  };
+
+struct basic_siginfo
+  {
+  int   bsi_signo;
+  int   bsi_errno;
+  int   bsi_code;
+  pid_t bsi_pid;
+  uid_t bsi_uid;
+  int   bsi_status;
+  void* bsi_addr;
+  union basic_sigval bsi_value;
+  long  bsi_band;
+  
+  unsigned long bsi_pad[7];
+  };
+
+#endif
 
 }; // namespace apoa
 

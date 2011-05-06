@@ -10,12 +10,15 @@
 ###############################################################################
  */
 
-#include "basic_process_context.hpp"
-#include "process_handler_impl.hpp"
+#include <sys/wait.h>
+#include <unistd.h>
+#include <fcntl.h>
 
 #include <boost/filesystem/v3/operations.hpp>
 
-#include <sys/wait.h>
+#include "basic_process_context.hpp"
+#include "process_handler_impl.hpp"
+
 
 namespace apoa
 {
@@ -308,57 +311,15 @@ void process_handler_impl::create_pipe(
 
     // Set parent fds non-block and close on exec
     fcntl_flags = fcntl(pipe_one[0], F_GETFL, 0);
-    if (fcntl_flags == -1)
-      {
-      ec.assign(errno, boost::system::get_system_category());
-      break;
-      }
-
-    if (fcntl(pipe_one[0], F_SETFL, fcntl_flags | O_NONBLOCK) == -1)
-      {
-      ec.assign(errno, boost::system::get_system_category());
-      break;
-      }
-
+    fcntl(pipe_one[0], F_SETFL, fcntl_flags | O_NONBLOCK);
     fcntl_flags = fcntl(pipe_one[0], F_GETFD, 0);
-    if (fcntl_flags == -1)
-      {
-      ec.assign(errno, boost::system::get_system_category());
-      break;
-      }
-
-    if (fcntl(pipe_one[0], F_SETFD, fcntl_flags | O_CLOEXEC))
-      {
-      ec.assign(errno, boost::system::get_system_category());
-      break;
-      }
-
+    fcntl(pipe_one[0], F_SETFD, fcntl_flags | FD_CLOEXEC);
+    
     fcntl_flags = fcntl(pipe_two[1], F_GETFL, 0);
-    if (fcntl_flags == -1)
-      {
-      ec.assign(errno, boost::system::get_system_category());
-      break;
-      }
-
-    if (fcntl(pipe_two[1], F_SETFL, fcntl_flags | O_NONBLOCK) == -1)
-      {
-      ec.assign(errno, boost::system::get_system_category());
-      break;
-      }
-
+    fcntl(pipe_two[1], F_SETFL, fcntl_flags | O_NONBLOCK);
     fcntl_flags = fcntl(pipe_two[1], F_GETFD, 0);
-    if (fcntl_flags == -1)
-      {
-      ec.assign(errno, boost::system::get_system_category());
-      break;
-      }
-
-    if (fcntl(pipe_two[1], F_SETFD, fcntl_flags | O_CLOEXEC))
-      {
-      ec.assign(errno, boost::system::get_system_category());
-      break;
-      }
-
+    fcntl(pipe_two[1], F_SETFD, fcntl_flags | FD_CLOEXEC);
+    
     } while(false);
   }
 

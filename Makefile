@@ -44,11 +44,6 @@ SUBDIRS         = $(INCDIR) $(SRCDIR)
 PREFIX          = /usr
 
 
-# NBRS-5.0 - remove otherwise
-ASIODIR         = /opt/nbboost
-BOOSTDIR        = /opt/nbboost
-
-
 ###############################################################################
 CC              = g++
 
@@ -148,7 +143,7 @@ dirs:
 	mkdir -p $(OBJDIR) $(SODIR) $(EXEDIR)
 
 clean-objs:
-	rm $(OBJDIR) -rf
+	rm -rf $(OBJDIR)
 
 clean:
 	@startdir=$(PWD)

@@ -67,6 +67,7 @@ basic_thread_handler::basic_thread_handler(boost::asio::io_service& io_service) 
     {
     if (get_tid() != getpid())
       {
+printf("pid: '%d', tid: '%d'\n", getpid(), get_tid());
       BOOST_ASSERT(0 && "basic_thread_handler: must be initialised in the process thread");
       
       return;

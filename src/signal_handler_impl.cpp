@@ -11,6 +11,7 @@
  */
 
 #include <unistd.h>
+#include <fcntl.h>
 #include <signal.h>
 #ifdef __linux__
 #include <sys/signalfd.h>
@@ -393,11 +394,21 @@ posix_signal_handler_impl::posix_sigaction_handler::~posix_sigaction_handler()
 signal_handler_base_impl::basic_signal_descriptor&
     posix_signal_handler_impl::posix_sigaction_handler::open_descriptor()
   {
-  if (pipe2(_posix_signal_pipe, O_NONBLOCK | O_CLOEXEC))
+  if (pipe(_posix_signal_pipe))
     {
     _posix_signal_pipe[0] = -1;
     _posix_signal_pipe[1] = -1;
     }
+  
+  int fcntl_flags = fcntl(_posix_signal_pipe[0], F_GETFD);
+  fcntl(_posix_signal_pipe[0], F_SETFD, fcntl_flags | FD_CLOEXEC);
+  fcntl_flags = fcntl(_posix_signal_pipe[0], F_GETFL);
+  fcntl(_posix_signal_pipe[0], F_SETFL, fcntl_flags | O_NONBLOCK);
+  
+  fcntl_flags = fcntl(_posix_signal_pipe[1], F_GETFD);
+  fcntl(_posix_signal_pipe[1], F_SETFD, fcntl_flags | FD_CLOEXEC);
+  fcntl_flags = fcntl(_posix_signal_pipe[1], F_GETFL);
+  fcntl(_posix_signal_pipe[1], F_SETFL, fcntl_flags | O_NONBLOCK);
   
   return _posix_signal_pipe[0];
   }
@@ -479,6 +490,7 @@ void posix_signal_handler_impl::handle_sigaction(
   struct basic_siginfo temp_bsi;
   memset(&temp_bsi, 0, sizeof(temp_bsi));
   
+#ifdef __linux__
   temp_bsi.bsi_signo = info->si_signo;
   temp_bsi.bsi_errno = info->si_errno;
   temp_bsi.bsi_code = info->si_code;
@@ -496,6 +508,18 @@ void posix_signal_handler_impl::handle_sigaction(
   temp_bsi.bsi_addr = reinterpret_cast<uint64_t>(info->si_addr);
   temp_bsi.bsi_ttid = get_tid();
   
+#else ifdef __APPLE__
+  temp_bsi.bsi_signo = info->si_signo;
+  temp_bsi.bsi_errno = info->si_errno;
+  temp_bsi.bsi_code = info->si_code;
+  temp_bsi.bsi_pid = info->si_pid;
+  temp_bsi.bsi_uid = info->si_uid;
+  temp_bsi.bsi_status = info->si_status;
+  temp_bsi.bsi_addr = info->si_addr;
+  memcpy(&temp_bsi.bsi_value, &info->si_value, sizeof(info->si_value));
+  temp_bsi.bsi_band = info->si_band;
+#endif
+  
   if (_posix_signal_pipe[1] != -1)
     {
     write(_posix_signal_pipe[1], &temp_bsi, sizeof(struct basic_siginfo));
@@ -503,6 +527,8 @@ void posix_signal_handler_impl::handle_sigaction(
   }
 
 
+
+#ifdef __linux__
 
 //#############################################################################
 int _signalfd_fd = 0;
@@ -601,5 +627,7 @@ void signalfd_signal_handler_impl::remove_sigaction(
   
   pthread_sigmask(SIG_SETMASK, &_signalfd_process_sigset, NULL);
   }
+
+#endif // __linux__
 
 }; // namespace apoa
