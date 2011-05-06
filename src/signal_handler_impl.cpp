@@ -10,7 +10,9 @@
 
 #include <unistd.h>
 #include <signal.h>
+#ifdef __linux__
 #include <sys/signalfd.h>
+#endif
 #include <errno.h>
 
 #include <set>

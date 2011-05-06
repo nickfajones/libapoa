@@ -130,7 +130,7 @@ clean:
 	for dir in $(SUBDIRS); do \
 	  cd $$dir && rm -f *~ .#* && cd $$startdir; \
 	done;
-	rm $(OBJDIR)* -rf
+	rm -rf $(OBJDIR)*
 
 
 ###############################################################################
