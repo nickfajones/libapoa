@@ -1,6 +1,8 @@
 /*#############################################################################
 #
 # Copyright (C) 2011 Network Box Corporation Limited
+#   nick.jones@network-box.com
+#   jeff.he@network-box.com
 #
 # Distributed under the Boost Software License, Version 1.0. (See accompanying
 # file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -404,8 +406,8 @@ void posix_signal_handler_impl::posix_sigaction_handler::close_descriptor()
   {
   if (_posix_signal_pipe[0] != -1)
     {
-    while (close(_posix_signal_pipe[0]) == -1 && (errno == EINTR)) {}
-    while (close(_posix_signal_pipe[1]) == -1 && (errno == EINTR)) {}
+    close(_posix_signal_pipe[0]);
+    close(_posix_signal_pipe[1]);
     
     _posix_signal_pipe[0] = -1;
     _posix_signal_pipe[1] = -1;
@@ -444,8 +446,7 @@ void posix_signal_handler_impl::create_sigaction_handler(
     boost::asio::io_service& io_service,
     boost::shared_ptr<sigaction_handler>& handler)
   {
-  handler.reset(
-    new posix_sigaction_handler(io_service));
+  handler.reset(new posix_sigaction_handler(io_service));
   }
 
 //#############################################################################
@@ -457,7 +458,7 @@ void posix_signal_handler_impl::add_sigaction(
   
   sa.sa_sigaction = &handle_sigaction;
   sigemptyset(&sa.sa_mask);
-  sa.sa_flags = SA_SIGINFO;
+  sa.sa_flags = SA_SIGINFO | SA_RESTART;
   
   if (sigaction(key.signum_, &sa, &key.old_sa_))
     {
@@ -536,8 +537,8 @@ void signalfd_signal_handler_impl::signalfd_sigaction_handler::close_descriptor(
   {
   if (_signalfd_fd != -1)
     {
-    while (close(_signalfd_fd) == -1 && (errno == EINTR)) {}
-
+    close(_signalfd_fd);
+    
     _signalfd_fd = -1;
     }
   }
@@ -569,8 +570,7 @@ void signalfd_signal_handler_impl::create_sigaction_handler(
     boost::asio::io_service& io_service,
     boost::shared_ptr<sigaction_handler>& handler)
   {
-  handler.reset(
-    new signalfd_sigaction_handler(io_service));
+  handler.reset(new signalfd_sigaction_handler(io_service));
   }
 
 //#############################################################################

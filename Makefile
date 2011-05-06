@@ -15,12 +15,12 @@ PROJECT         = libapoa
 
 ARCH            = $(shell uname -m)
 
-ifeq ($(ARCH), x86_64)
-arch_LIB        = lib64
-else ifeq ($(ARCH), i386)
-arch_LIB        = lib
-else ifeq ($(ARCH), i686)
-arch_LIB        = lib
+ifeq ($(ARCH),x86_64)
+arch_LIB        = /lib64
+else ifeq ($(ARCH),i386)
+arch_LIB        = /lib
+else ifeq ($(ARCH),i686)
+arch_LIB        = /lib
 else
 $(error target ${ARCH} not supported)
 endif
@@ -38,6 +38,15 @@ INCDIR          = $(INCROOT)/libapoa
 SRCDIR          = $(PWD)/src
 
 SUBDIRS         = $(INCDIR) $(SRCDIR)
+
+
+###############################################################################
+PREFIX          = /usr
+
+
+# NBRS-5.0 - remove otherwise
+ASIODIR         = /opt/nbboost
+BOOSTDIR        = /opt/nbboost
 
 
 ###############################################################################
@@ -59,9 +68,9 @@ build_CFLAGS    = $(base_CFLAGS)
 
 base_OPT        =
 dev_OPT         = $(base_OPT) -g3
-build_OPT       = $(base_OPT)
+build_OPT       = $(base_OPT) -O2 -g
 
-base_CPPFLAGS   = -D_GNU_SOURCE $(arch_CPPFLAGS) -isystem $(INCROOT) -I $(INCDIR)
+base_CPPFLAGS   = -D_REENTRANT -D_GNU_SOURCE $(arch_CPPFLAGS) -isystem $(INCROOT) -I $(INCDIR)
 dev_CPPFLAGS    = $(base_CPPFLAGS)
 build_CPPFLAGS  = $(base_CPPFLAGS) -DNDEBUG
 
@@ -73,24 +82,37 @@ base_LDFLAGS    =
 dev_LDFLAGS     = $(base_LDFLAGS)
 build_LDFLAGS   = $(base_LDFLAGS)
 
-base_LIBS       =
+base_LIBS       = -lpthread
 dev_LIBS        = $(base_LIBS)
 build_LDFLAGS   = $(base_LIBS)
 
 
 ###############################################################################
-dev_CPPFLAGS   += -I/opt/nbboost/include
-build_CPPFLAGS += -I/opt/nbboost/include
-dev_LDOBJS     += /opt/nbboost/$(arch_LIB)/libboost_system-mt.a \
-  /opt/nbboost/$(arch_LIB)/libboost_filesystem-mt.a \
-  /opt/nbboost/$(arch_LIB)/libboost_thread-mt.a
-build_LDOBJS   += /opt/nbboost/$(arch_LIB)/libboost_system-mt.a \
-  /opt/nbboost/$(arch_LIB)/libboost_filesystem-mt.a \
-  /opt/nbboost/$(arch_LIB)/libboost_thread-mt.a
-dev_LDFLAGS    += -L/opt/nbboost/$(arch_LIB) -Wl,-rpath=/opt/nbboost/$(arch_LIB)
-build_LDFLAGS  += -L/opt/nbboost/$(arch_LIB) -Wl,-rpath=/opt/nbboost/$(arch_LIB)
-dev_LIBS       += -lboost_system-mt -lboost_filesystem-mt -lboost_thread-mt
-build_LIBS     += -lboost_system-mt -lboost_filesystem-mt -lboost_thread-mt
+ifneq (,$(shell [ -f dev.mk ] && echo 1))
+include dev.mk
+endif
+
+ifeq ($(ASIODIR),)
+ASIODIR         = /usr
+endif
+
+ifneq ($(ASIODIR),/usr)
+dev_CPPFLAGS    += -isystem $(ASIODIR)
+endif
+
+
+ifeq ($(BOOSTDIR),)
+BOOSTDIR        = /usr
+endif
+
+ifneq ($(BOOSTDIR),/usr)
+dev_CPPFLAGS    += -isystem $(BOOSTDIR)/include
+build_CPPFLAGS  += -isystem $(BOOSTDIR)/include
+dev_LDFLAGS     += -L$(BOOSTDIR)$(arch_LIB) -Wl,-rpath=$(BOOSTDIR)$(arch_LIB)
+build_LDFLAGS   += -L$(BOOSTDIR)$(arch_LIB) -Wl,-rpath=$(BOOSTDIR)$(arch_LIB)
+endif
+dev_LIBS        += -lboost_system-mt -lboost_filesystem-mt -lboost_thread-mt
+build_LIBS      += -lboost_system-mt -lboost_filesystem-mt -lboost_thread-mt
 
 
 ##########################################################################
@@ -125,6 +147,9 @@ apoaapp: dev $(SODIR)/libapoa.a
 dirs:
 	mkdir -p $(OBJDIR) $(SODIR) $(EXEDIR)
 
+clean-objs:
+	rm $(OBJDIR) -rf
+
 clean:
 	@startdir=$(PWD)
 	for dir in $(SUBDIRS); do \
@@ -135,9 +160,9 @@ clean:
 
 ###############################################################################
 install:
-	mkdir -p $(DESTDIR)/usr/$(arch_LIB)
-	install -m 0755 $(SODIR)/libapoa.so $(DESTDIR)/usr/$(arch_LIB)
-	install -m 0644 $(SODIR)/libapoa.a $(DESTDIR)/usr/$(arch_LIB)
+	mkdir -p $(DESTDIR)$(PREFIX)$(arch_LIB)
+	install -m 0755 $(SODIR)/libapoa.so $(DESTDIR)$(PREFIX)$(arch_LIB)
+	install -m 0644 $(SODIR)/libapoa.a $(DESTDIR)$(PREFIX)$(arch_LIB)
 	
-	mkdir -p $(DESTDIR)/usr/include/libapoa
-	install -m 0644 $(INCDIR)/*.h* $(DESTDIR)/usr/include/libapoa
+	mkdir -p $(DESTDIR)$(PREFIX)/include/libapoa
+	install -m 0644 $(INCDIR)/*.h* $(DESTDIR)$(PREFIX)/include/libapoa
