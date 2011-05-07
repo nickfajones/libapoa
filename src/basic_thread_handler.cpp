@@ -65,9 +65,9 @@ basic_thread_handler::basic_thread_handler(boost::asio::io_service& io_service) 
   {
   if (details::process_details_.use_count() == 0)
     {
-    if (get_tid() != getpid())
+    if (!is_process_thread())
       {
-printf("pid: '%d', tid: '%d'\n", getpid(), get_tid());
+printf("pid: '%d', tid: '%d'\n", get_pid(), get_tid());
       BOOST_ASSERT(0 && "basic_thread_handler: must be initialised in the process thread");
       
       return;
@@ -123,7 +123,7 @@ void basic_thread_handler::shutdown_thread(int retval)
 
 void basic_thread_handler::shutdown_process(int retval)
   {
-  service.shutdown_thread(implementation, getpid(), retval);
+  service.shutdown_thread(implementation, get_pid(), retval);
   }
 
 //#############################################################################

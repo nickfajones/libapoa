@@ -14,13 +14,10 @@
 #include <sys/types.h>
 #include <sys/time.h>
 #include <time.h>
-#include <ctype.h>
-#include <string.h>
 #include <stdio.h>
 #include <stdarg.h>
 #ifdef __APPLE__
 #include <mach/mach_init.h>
-#include <mach/mach_port.h>
 #endif
 
 #include "common.hpp"
@@ -88,9 +85,23 @@ void log(log_level level, const char* fmt, ...)
 
 
 //#############################################################################
-#ifdef __linux__
-__thread pid_t _apoa_tid = 0;
+#if defined __linux__
+__thread pid_t _apoa_linux_tid = 0;
 #endif
+#if defined __APPLE__
+pid_t _apoa_apple_pid = pthread_mach_thread_np(pthread_self());
+#endif
+
+pid_t get_pid()
+  {
+#if defined __linux__
+  return getpid();
+#elif defined __APPLE__
+  return _apoa_apple_pid;
+#else
+#error get_pid: unsupported platform
+#endif
+  }
 
 pid_t get_tid()
   {
@@ -99,15 +110,17 @@ pid_t get_tid()
     {
     _apoa_tid = (pid_t)syscall(__NR_gettid);
     }
-  
   return _apoa_tid;
 #elif defined __APPLE__
-  int apoa_tid = mach_thread_self();
-  mach_port_deallocate(mach_task_self(), apoa_tid);
-  return apoa_tid;
+  return pthread_mach_thread_np(pthread_self());
 #else
-#error "No support for get_tid on this platform"
+#error "get_tid: unsupported platform"
 #endif
+  }
+
+bool is_process_thread()
+  {
+  return (get_tid() == get_pid());
   }
 
 }; // namespace apoa

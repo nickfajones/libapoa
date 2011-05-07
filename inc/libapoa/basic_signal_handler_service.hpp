@@ -69,7 +69,7 @@ class basic_signal_handler_service :
       {
       basic_signal_callback h = handler;
       
-      if (apoa::get_tid() == getpid())
+      if (is_process_thread())
         {
         impl->async_wait(h);
 

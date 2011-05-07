@@ -66,7 +66,7 @@ void basic_signal_handler_service::handle(
     int signum,
     boost::system::error_code& ec)
   {
-  if (apoa::get_tid() == getpid())
+  if (is_process_thread())
     {
     impl->handle(signum, ec);
 

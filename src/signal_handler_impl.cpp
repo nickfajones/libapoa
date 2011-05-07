@@ -232,7 +232,7 @@ void signal_handler_base_impl::deactivate()
 //#############################################################################
 std::size_t signal_handler_base_impl::cancel(boost::system::error_code& ec)
   {
-  if (apoa::get_tid() == getpid())
+  if (is_process_thread())
     {
     unhandle(ec);
     }

@@ -132,7 +132,7 @@ build: dirs
 	$(MAKE) $(SODIR)/libapoa.so OBJS="$(build_OBJS)" \
 	  LDOBJS="$(build_LDOBJS)" LDFLAGS="$(build_LDFLAGS)" LIBS="$(build_LIBS)"
 
-apoaapp: dev $(SODIR)/libapoa.a
+apoaapp: dev
 	$(MAKE) $(EXEDIR)/apoaapp \
 	  CFLAGS="$(dev_CFLAGS)" OPT="$(dev_OPT)" CPPFLAGS="$(dev_CPPFLAGS)" \
 	  LDOBJS="$(SODIR)/libapoa.a" LDFLAGS="$(dev_LDFLAGS)" LIBS="$(dev_LIBS)"

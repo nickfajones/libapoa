@@ -96,7 +96,7 @@ void thread_handler_impl::process_start(
   {
   boost::shared_ptr<thread_registration> registration(
     new thread_registration());
-  registration->tid_ = getpid();
+  registration->tid_ = get_pid();
   registration->is_process_ = true;
   registration->shutdown_countdown_ =
     thread_process_shutdown_countdown_default;
@@ -269,7 +269,7 @@ void thread_handler_impl::thread_main(
     
     boost::unique_lock<boost::mutex> threads_lock(threads_mutex_);
 
-    threads_[getpid()]->thread_io_service_->post(
+    threads_[get_pid()]->thread_io_service_->post(
     boost::bind(
       &thread_handler_impl::shutdown_thread2, this,
       registration));
@@ -307,7 +307,7 @@ void thread_handler_impl::shutdown_thread2(
   boost::unique_lock<boost::mutex> threads_lock(threads_mutex_);
 
   boost::shared_ptr<thread_registration> process_registration =
-    threads_[getpid()];
+    threads_[get_pid()];
 
   if (process_registration->is_shutdown_started_ &&
       (threads_.size() == 1) &&

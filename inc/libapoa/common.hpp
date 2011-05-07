@@ -47,8 +47,9 @@ void log(log_level level, const char* fmt, ...);
 
 
 //#############################################################################
-// get current thread id
+pid_t get_pid();
 pid_t get_tid();
+bool is_process_thread();
 
 
 
