@@ -14,6 +14,7 @@
 
 #include <sys/types.h>
 
+#include <boost/call_traits.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
@@ -105,7 +106,7 @@ class basic_thread_handler :
         void (StartTargetType::*method)
           (const boost::system::error_code&, A2),
         StartTargetType* target,
-        typename value_carrier<A2>::param_type a2)
+        typename boost::call_traits<A2>::param_type a2)
       {
       pre_start();
       
@@ -119,7 +120,7 @@ class basic_thread_handler :
                 StartTargetType,
                 void (StartTargetType::*)
                   (const boost::system::error_code&, A2),
-                typename value_carrier<A2>::param_type>,
+                typename boost::call_traits<A2>::param_type>,
               method,
               _1, a2));
         }
@@ -140,8 +141,8 @@ class basic_thread_handler :
         void (StartTargetType::*method)
           (const boost::system::error_code&, A2, A3),
         StartTargetType* target,
-        typename value_carrier<A2>::param_type a2,
-        typename value_carrier<A3>::param_type a3)
+        typename boost::call_traits<A2>::param_type a2,
+        typename boost::call_traits<A3>::param_type a3)
       {
       pre_start();
       
@@ -155,8 +156,8 @@ class basic_thread_handler :
                 StartTargetType,
                 void (StartTargetType::*)
                   (const boost::system::error_code&, A2, A3),
-                typename value_carrier<A2>::param_type,
-                typename value_carrier<A3>::param_type>,
+                typename boost::call_traits<A2>::param_type,
+                typename boost::call_traits<A3>::param_type>,
               method,
               _1, a2, a3));
         }
@@ -219,7 +220,7 @@ class basic_thread_handler :
         void (StartTargetType::*method)
           (const boost::system::error_code&, A2),
         StartTargetType* target,
-        typename value_carrier<A2>::param_type a2)
+        typename boost::call_traits<A2>::param_type a2)
       {
       if (target == NULL)
         {
@@ -231,7 +232,7 @@ class basic_thread_handler :
                 StartTargetType,
                 void (StartTargetType::*)
                   (const boost::system::error_code&, A2),
-                typename value_carrier<A2>::param_type>,
+                typename boost::call_traits<A2>::param_type>,
               method,
               _1, a2));
         }
@@ -250,8 +251,8 @@ class basic_thread_handler :
         void (StartTargetType::*method)
           (const boost::system::error_code&, A2, A3),
         StartTargetType* target,
-        typename value_carrier<A2>::param_type a2,
-        typename value_carrier<A3>::param_type a3)
+        typename boost::call_traits<A2>::param_type a2,
+        typename boost::call_traits<A3>::param_type a3)
       {
       if (target == NULL)
         {
@@ -263,8 +264,8 @@ class basic_thread_handler :
                 StartTargetType,
                 void (StartTargetType::*)
                   (const boost::system::error_code&, A2, A3),
-                typename value_carrier<A2>::param_type,
-                typename value_carrier<A3>::param_type>,
+                typename boost::call_traits<A2>::param_type,
+                typename boost::call_traits<A3>::param_type>,
               method,
               _1, a2, a3));
         }
@@ -298,7 +299,7 @@ class basic_thread_handler :
     static void new_instance_callback_helper(
         TargetMethod method,
         const boost::system::error_code& ec,
-        typename value_carrier<A2>::param_type a2)
+        typename boost::call_traits<A2>::param_type a2)
       {
       boost::shared_ptr<TargetType> target(
         new TargetType(apoa::get_io_service()));
@@ -311,8 +312,8 @@ class basic_thread_handler :
     static void new_instance_callback_helper(
         TargetMethod method,
         const boost::system::error_code& ec,
-        typename value_carrier<A2>::param_type a2,
-        typename value_carrier<A3>::param_type a3)
+        typename boost::call_traits<A2>::param_type a2,
+        typename boost::call_traits<A3>::param_type a3)
       {
       boost::shared_ptr<TargetType> target(
         new TargetType(apoa::get_io_service()));
