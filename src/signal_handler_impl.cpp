@@ -508,7 +508,7 @@ void posix_signal_handler_impl::handle_sigaction(
   temp_bsi.bsi_addr = reinterpret_cast<uint64_t>(info->si_addr);
   temp_bsi.bsi_ttid = get_tid();
   
-#else ifdef __APPLE__
+#elif defined __APPLE__
   temp_bsi.bsi_signo = info->si_signo;
   temp_bsi.bsi_errno = info->si_errno;
   temp_bsi.bsi_code = info->si_code;
