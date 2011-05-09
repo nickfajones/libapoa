@@ -14,8 +14,9 @@
 #include <sys/types.h>
 #include <sys/time.h>
 #include <time.h>
-#include <stdio.h>
 #include <stdarg.h>
+#include <string.h>
+#include <stdio.h>
 #ifdef __APPLE__
 #include <mach/mach_init.h>
 #endif
@@ -106,11 +107,11 @@ pid_t get_pid()
 pid_t get_tid()
   {
 #if defined __linux__
-  if (_apoa_tid == 0)
+  if (_apoa_linux_tid == 0)
     {
-    _apoa_tid = (pid_t)syscall(__NR_gettid);
+    _apoa_linux_tid = (pid_t)syscall(__NR_gettid);
     }
-  return _apoa_tid;
+  return _apoa_linux_tid;
 #elif defined __APPLE__
   return pthread_mach_thread_np(pthread_self());
 #else

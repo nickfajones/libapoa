@@ -44,7 +44,7 @@ struct basic_siginfo
   uint8_t   bsi_pad[44];
   };
 
-#else ifdef __APPLE__
+#elif defined __APPLE__
 
 union basic_sigval
   {
@@ -67,6 +67,8 @@ struct basic_siginfo
   unsigned long bsi_pad[7];
   };
 
+#else
+#error basic_siginfo: unsupported platform
 #endif
 
 }; // namespace apoa
