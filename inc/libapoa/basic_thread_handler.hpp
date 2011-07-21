@@ -19,6 +19,8 @@
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
 #include <boost/asio.hpp>
+#include <boost/program_options/variables_map.hpp>
+#include <boost/program_options/options_description.hpp>
 
 #include <libapoa/common.hpp>
 #include <libapoa/basic_thread_handler_service.hpp>
@@ -34,6 +36,10 @@ boost::asio::io_service& get_io_service(pid_t tid = 0);
 void shutdown_thread(pid_t tid = apoa::get_tid(), int retval = 0);
 void shutdown_process(int retval = 0);
 
+bool process_has_option(const std::string& option_name);
+boost::program_options::variable_value get_process_option(
+  const std::string& option_name);
+
 
 
 //#############################################################################
@@ -46,13 +52,19 @@ class basic_thread_handler :
     
     friend void shutdown_thread(pid_t, int);
     friend void shutdown_process(int);
-    
+
+    friend bool process_has_option(const std::string& option_name);
+    friend boost::program_options::variable_value get_process_option(
+      const std::string& option_name);
+
   public:
     explicit basic_thread_handler(boost::asio::io_service& io_service);
     virtual ~basic_thread_handler();
     
   public:
-    void process_init(int argc, char** argv);
+    void process_init(
+      boost::program_options::options_description& options_desc,
+      int argc, char** argv);
     
   public:
     template <typename StartHandler>

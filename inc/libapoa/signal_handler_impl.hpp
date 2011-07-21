@@ -63,7 +63,7 @@ class signal_handler_base_impl :
     void async_wait(basic_signal_callback callback);
     
   public:
-    void async_unhandle(boost::shared_ptr<signal_handler_base_impl> self);
+    void async_unhandle();
     void unhandle(boost::system::error_code& ec);
 
   public:
@@ -108,8 +108,7 @@ class signal_handler_base_impl :
       private:
         void on_descriptor_read(
           const boost::system::error_code& ec,
-          std::size_t bytes_transferred,
-          boost::shared_ptr<sigaction_handler> self);
+          std::size_t bytes_transferred);
         
       private:
         boost::asio::posix::stream_descriptor signal_descriptor_;

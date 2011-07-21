@@ -16,11 +16,13 @@
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
 #include <boost/asio.hpp>
+#include <boost/program_options/parsers.hpp>
 
 #include <libapoa/common.hpp>
 
 #include <libapoa/basic_thread_handler_service.hpp>
 #include <libapoa/basic_thread_handler.hpp>
+
 
 
 namespace apoa
@@ -47,6 +49,8 @@ class basic_thread_handler::details
     
     bool is_initialised_;
     bool is_started_;
+
+    boost::program_options::variables_map options_map_;
     
   public:
     static boost::weak_ptr<basic_thread_handler::details>
@@ -89,14 +93,29 @@ basic_thread_handler::~basic_thread_handler()
   }
 
 //#############################################################################
-void basic_thread_handler::process_init(int argc, char** argv)
+void basic_thread_handler::process_init(
+    boost::program_options::options_description& options_desc,
+    int argc, char** argv)
   {
   if (process_details_->is_initialised_)
     {
     BOOST_ASSERT(0 && "basic_thread_handler: process already initialised");
     }
-  
-  
+
+  try
+    {
+    boost::program_options::store(boost::program_options::parse_command_line(
+      argc, argv, options_desc), process_details_->options_map_);
+    boost::program_options::notify(process_details_->options_map_);
+
+    process_details_->is_initialised_ = true;
+    }
+  catch(std::exception &e)
+    {
+    printf("%s\n", e.what());
+    BOOST_ASSERT(0 && "basic_thread_handler: program option error");
+    }
+
   }
 
 //#############################################################################
@@ -190,6 +209,25 @@ void shutdown_process(int retval)
   basic_thread_handler(
     *basic_thread_handler::details::process_details_.lock()->
       process_io_service_).shutdown_process(retval);
+  }
+
+bool process_has_option(const std::string& option_name)
+  {
+  return (basic_thread_handler::details::process_details_.lock()->
+    options_map_.count(option_name) > 0);
+  }
+
+//#############################################################################
+boost::program_options::variable_value get_process_option(
+    const std::string& option_name)
+  {
+  if (basic_thread_handler::details::process_details_.use_count() == 0)
+    {
+    BOOST_ASSERT(0 && "get_process_option: basic_thread_handler not yet initialised");
+    }
+
+  return basic_thread_handler::details::process_details_.lock()->
+    options_map_[option_name];
   }
 
 }; // namespace apoa

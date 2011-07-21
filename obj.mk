@@ -13,6 +13,9 @@ LIBAPOA_OBJS += \
   $(OBJDIR)/basic_thread_handler.o \
   $(OBJDIR)/basic_thread_handler_service.o \
   $(OBJDIR)/thread_handler_impl.o \
+  $(OBJDIR)/basic_thread_pool.o \
+  $(OBJDIR)/basic_thread_pool_service.o \
+  $(OBJDIR)/basic_thread_pool_impl.o \
   $(OBJDIR)/basic_signal_handler_service.o \
   $(OBJDIR)/signal_handler_impl.o \
   $(OBJDIR)/basic_process_context.o \
@@ -36,6 +39,20 @@ $(OBJDIR)/basic_thread_handler_service.o: $(SRCDIR)/basic_thread_handler_service
 
 $(OBJDIR)/thread_handler_impl.o: $(SRCDIR)/thread_handler_impl.cpp \
   $(INCDIR)/thread_handler_impl.hpp
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(OPT) $< -c -o $@
+
+
+###############################################################################
+$(OBJDIR)/basic_thread_pool.o: $(SRCDIR)/basic_thread_pool.cpp \
+  $(INCDIR)/basic_thread_pool.hpp
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(OPT) $< -c -o $@
+
+$(OBJDIR)/basic_thread_pool_service.o: $(SRCDIR)/basic_thread_pool_service.cpp \
+  $(INCDIR)/basic_thread_pool_service.hpp
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(OPT) $< -c -o $@
+
+$(OBJDIR)/basic_thread_pool_impl.o: $(SRCDIR)/basic_thread_pool_impl.cpp \
+  $(INCDIR)/basic_thread_pool_impl.hpp
 	$(CC) $(CFLAGS) $(CPPFLAGS) $(OPT) $< -c -o $@
 
 

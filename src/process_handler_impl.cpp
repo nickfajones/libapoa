@@ -66,7 +66,7 @@ void process_handler_impl::launch(
     {
     // Assign local context
     context_ = context;
-
+    
     // Verify if file executable
     if (!is_file_executable(context_.executable_file_path(), ec))
       {
@@ -74,41 +74,41 @@ void process_handler_impl::launch(
         {
         ec.assign(ENOTSUP, boost::system::get_system_category());
         }
-
+      
       break;
       }
-
+    
     // Create SIGCHLD signal handler
     sigchld_handler_.handle(SIGCHLD);
     sigchld_handler_.async_wait(boost::bind(
-      &process_handler_impl::sigchld_handle, this,
-      boost::asio::placeholders::error, _2, shared_from_this()));
-
+      &process_handler_impl::sigchld_handle, shared_from_this(),
+      boost::asio::placeholders::error, _2));
+    
     // Create pipe
     create_pipe(pipe_one, pipe_two, ec);
     if (ec)
       {
       break;
       }
-
+    
     // Do fork
     io_service_.notify_fork(boost::asio::io_service::fork_prepare);
     child_pid = fork();
-
+    
     // Child process of fork
     if (child_pid == 0)
       {
-      exec_in_child(pipe_one, pipe_two, ec);
+      exec_in_child(pipe_one, pipe_two);
       break;
       }
-
+    
     // fork fails
     if (child_pid == -1)
       {
       ec.assign(errno, boost::system::get_system_category());
       break;
       }
-
+    
     // Parent process
     io_service_.notify_fork(boost::asio::io_service::fork_parent);
 
@@ -177,11 +177,7 @@ void process_handler_impl::exec(
       {
       ec.assign(errno, boost::system::get_system_category());
       }
-    else
-      {
-      child_active_ = true;
-      }
-
+    
     return;
     }
 
@@ -191,80 +187,42 @@ void process_handler_impl::exec(
     {
     ec.assign(errno, boost::system::get_system_category());
     }
-  else
-    {
-    child_active_ = true;
-    }
   }
 
 //#############################################################################
 void process_handler_impl::cancel(boost::system::error_code& ec)
   {
-  do
+  if (!child_active_)
     {
-    if (read_descriptor_.is_open())
-      {
-      // Cancel read asynchronous operations
-      read_descriptor_.cancel(ec);
-      if (ec)
-        {
-        break;
-        }
-
-      async_reading_ = false;
-
-      // Close read descriptor
-      read_descriptor_.close(ec);
-      if (ec)
-        {
-        break;
-        }
-      }
-
-    if (write_descriptor_.is_open())
-      {
-      // Cancel write asynchronous operations
-      write_descriptor_.cancel(ec);
-      if (ec)
-        {
-        break;
-        }
-
-      async_writing_ = false;
-
-      // Close write descriptor
-      write_descriptor_.close(ec);
-      if (ec)
-        {
-        break;
-        }
-      }
-
-    // Kill child process
-    if (child_active_)
-      if (kill(context_.handle(), SIGKILL) != 0)
-        if (errno != ESRCH)
-          {
-          ec.assign(errno, boost::system::get_system_category());
-          break;
-          }
-
-    child_active_ = false;
-
-    // Cancel signal handler
-    sigchld_handler_.cancel(ec);
-    if (ec)
-      {
-      break;
-      }
-
-    if (exit_callback_)
-      {
-      wait_exit_callback_ = NULL;
-      exit_callback_ = false;
-      }
-
-    } while(false);
+    return;
+    }
+  
+  if (read_descriptor_.is_open())
+    {
+    // Cancel read asynchronous operations
+    read_descriptor_.cancel(ec);
+    read_descriptor_.close(ec);
+    async_reading_ = false;
+    }
+  
+  if (write_descriptor_.is_open())
+    {
+    write_descriptor_.cancel(ec);
+    write_descriptor_.close(ec);
+    async_writing_ = false;
+    }
+  
+  sigchld_handler_.cancel(ec);
+  
+  // Kill child process
+  kill(context_.handle(), SIGKILL);
+  
+  child_active_ = false;
+  
+  // Cancel signal handler
+  
+  wait_exit_callback_ = NULL;
+  exit_callback_ = false;
   }
 
 //#############################################################################
@@ -292,7 +250,7 @@ void process_handler_impl::create_pipe(
     int pipe_one[], int pipe_two[], boost::system::error_code& ec)
   {
   int fcntl_flags = -1;
-
+  
   do
     {
     // Create pipe1
@@ -301,14 +259,14 @@ void process_handler_impl::create_pipe(
       ec.assign(errno, boost::system::get_system_category());
       break;
       }
-
+    
     // Create pipe2
     if (pipe(pipe_two) != 0)
       {
       ec.assign(errno, boost::system::get_system_category());
       break;
       }
-
+    
     // Set parent fds non-block and close on exec
     fcntl_flags = fcntl(pipe_one[0], F_GETFL, 0);
     fcntl(pipe_one[0], F_SETFL, fcntl_flags | O_NONBLOCK);
@@ -320,113 +278,85 @@ void process_handler_impl::create_pipe(
     fcntl_flags = fcntl(pipe_two[1], F_GETFD, 0);
     fcntl(pipe_two[1], F_SETFD, fcntl_flags | FD_CLOEXEC);
     
-    } while(false);
+    }
+  while(false);
   }
 
 //#############################################################################
-void process_handler_impl::exec_in_child(
-    int pipe_one[], int pipe_two[], boost::system::error_code& ec)
+void process_handler_impl::exec_in_child(int pipe_one[], int pipe_two[])
   {
   int parent_read_fd = pipe_one[0];
   int child_write_fd = pipe_one[1];
   int child_read_fd = pipe_two[0];
   int parent_write_fd = pipe_two[1];
-
+  
   do
     {
     // Close parent fds
-    if (close(parent_read_fd) != 0)
-      {
-      ec.assign(errno, boost::system::get_system_category());
-      break;
-      }
-
-    if (close(parent_write_fd) != 0)
-      {
-      ec.assign(errno, boost::system::get_system_category());
-      break;
-      }
-
+    close(parent_read_fd);
+    close(parent_write_fd);
+    
     // Close stdin fd
     if (close(STDIN_FILENO) != 0)
       {
-      ec.assign(errno, boost::system::get_system_category());
       break;
       }
-
+    
     // Alias read fd as stdin
     if (dup2(child_read_fd, STDIN_FILENO) == -1)
       {
-      ec.assign(errno, boost::system::get_system_category());
       break;
       }
-
+    
     // Close stdout fd
     if (close(STDOUT_FILENO) != 0)
       {
-      ec.assign(errno, boost::system::get_system_category());
       break;
       }
-
+    
     // Alias write fd as stdout
     if (dup2(child_write_fd, STDOUT_FILENO) == -1)
       {
-      ec.assign(errno, boost::system::get_system_category());
       break;
       }
-
+    
     // Close child fds
-    if (close(child_read_fd) != 0)
-      {
-      ec.assign(errno, boost::system::get_system_category());
-      break;
-      }
-
-    if (close(child_write_fd) != 0)
-      {
-      ec.assign(errno, boost::system::get_system_category());
-      break;
-      }
-
+    close(child_read_fd);
+    close(child_write_fd);
+    
     // Execute when no environment set
     if (context_.environment().size() == 0)
       {
-      if (execv(context_.executable_file_path().data(),
-            context_.get_args().get()) == -1)
-        {
-        ec.assign(errno, boost::system::get_system_category());
-        }
-
-      break;
+      execv(
+        context_.executable_file_path().data(),
+        context_.get_args().get());
       }
-
-    // Execute when use define some environment
-    if (execve(context_.executable_file_path().data(),
-          context_.get_args().get(), context_.get_envp().get()) == -1)
+    else
       {
-      ec.assign(errno, boost::system::get_system_category());
-      break;
+      // Execute when use define some environment
+      execve(
+        context_.executable_file_path().data(),
+        context_.get_args().get(), context_.get_envp().get());
       }
-
-    } while (false);
-
+    }
+  while (false);
+  
+  // if we are here, exec failed, we can only exit
   _exit(-1);
   }
 
 //#############################################################################
 void process_handler_impl::async_pipe_read_handle(
-  const boost::system::error_code& ec, std::size_t bytes_transferred,
-  async_pipe_read_callback handler,
-  boost::shared_ptr<process_handler_impl> self)
+    const boost::system::error_code& ec, std::size_t bytes_transferred,
+    async_pipe_read_callback handler)
   {
   async_reading_ = false;
   handler(ec, bytes_transferred);
   }
 
 void process_handler_impl::async_pipe_write_handle(
-  const boost::system::error_code& ec, std::size_t bytes_transferred,
-  async_pipe_write_callback handler,
-  boost::shared_ptr<process_handler_impl> self)
+    const boost::system::error_code& ec, std::size_t bytes_transferred,
+    async_pipe_write_callback handler)
   {
   async_writing_ = false;
   handler(ec, bytes_transferred);
@@ -434,8 +364,7 @@ void process_handler_impl::async_pipe_write_handle(
 
 //#############################################################################
 void process_handler_impl::sigchld_handle(
-  const boost::system::error_code& ec, apoa::siginfo sigint_info,
-  boost::shared_ptr<process_handler_impl> self)
+    const boost::system::error_code& ec, apoa::siginfo sigint_info)
   {
   int status = 0;
   boost::system::error_code new_ec;

@@ -112,16 +112,14 @@ void signal_handler_base_impl::sigaction_handler::init()
     boost::asio::buffer(signal_descriptor_buffer_),
     boost::bind(
       &signal_handler_base_impl::sigaction_handler::on_descriptor_read,
-      this,
+      shared_from_this(),
       boost::asio::placeholders::error,
-      boost::asio::placeholders::bytes_transferred,
-      shared_from_this()));
+      boost::asio::placeholders::bytes_transferred));
   }
 
 //#############################################################################
 void signal_handler_base_impl::sigaction_handler::on_descriptor_read(
-    const boost::system::error_code& ec, std::size_t bytes_transferred,
-    boost::shared_ptr<sigaction_handler> self)
+    const boost::system::error_code& ec, std::size_t bytes_transferred)
   {
   if (ec)
     {
@@ -196,10 +194,10 @@ void signal_handler_base_impl::sigaction_handler::on_descriptor_read(
       reinterpret_cast<char*>(signal_descriptor_buffer_) + buffer_end_,
       (sizeof(struct basic_siginfo) * 64) - buffer_end_),
     boost::bind(
-      &signal_handler_base_impl::sigaction_handler::on_descriptor_read, this,
+      &signal_handler_base_impl::sigaction_handler::on_descriptor_read,
+      shared_from_this(),
       boost::asio::placeholders::error,
-      boost::asio::placeholders::bytes_transferred,
-      shared_from_this()));
+      boost::asio::placeholders::bytes_transferred));
   
   unblock_signals();
   }
@@ -240,8 +238,7 @@ std::size_t signal_handler_base_impl::cancel(boost::system::error_code& ec)
     {
     apoa::get_process_io_service().post(
       boost::bind(
-        &signal_handler_base_impl::async_unhandle, this,
-        shared_from_this()));
+        &signal_handler_base_impl::async_unhandle, shared_from_this()));
     }
   
   boost::lock_guard<boost::mutex> active_lock(active_mutex_);
@@ -324,8 +321,7 @@ void signal_handler_base_impl::async_wait(basic_signal_callback callback)
   }
 
 //#############################################################################
-void signal_handler_base_impl::async_unhandle(
-  boost::shared_ptr<signal_handler_base_impl> self)
+void signal_handler_base_impl::async_unhandle()
   {
   boost::system::error_code ec;
   unhandle(ec);

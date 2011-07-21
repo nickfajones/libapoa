@@ -51,22 +51,20 @@ class mythread : public boost::enable_shared_from_this<mythread>
         boost::posix_time::seconds(5));
       m_timer.async_wait(
         boost::bind(
-          &mythread::on_timeout, this,
-          boost::asio::placeholders::error,
-          shared_from_this()));
+          &mythread::on_timeout, shared_from_this(),
+          boost::asio::placeholders::error));
       
       m_usr1_handler.handle(SIGUSR1);
       m_usr1_handler.async_wait(
         boost::bind(
-          &mythread::on_sigusr1, this,
+          &mythread::on_sigusr1, shared_from_this(),
           boost::asio::placeholders::error,
           _2));
       }
     
   public:
     void on_timeout(
-        const boost::system::error_code& ec,
-        boost::shared_ptr<mythread> self)
+        const boost::system::error_code& ec)
       {
       if (ec)
         {
@@ -79,9 +77,8 @@ class mythread : public boost::enable_shared_from_this<mythread>
         boost::posix_time::seconds(5));
       m_timer.async_wait(
         boost::bind(
-          &mythread::on_timeout, this,
-          boost::asio::placeholders::error,
-          shared_from_this()));
+          &mythread::on_timeout, shared_from_this(),
+          boost::asio::placeholders::error));
       }
     
   public:
@@ -142,21 +139,21 @@ class myapp : public boost::enable_shared_from_this<myapp>
       m_int_handler.handle(SIGINT);
       m_int_handler.async_wait(
         boost::bind(
-          &myapp::on_sigint, this,
+          &myapp::on_sigint, shared_from_this(),
           boost::asio::placeholders::error,
           _2));
       
       m_usr1_handler.handle(SIGUSR1);
       m_usr1_handler.async_wait(
         boost::bind(
-          &myapp::on_sigusr1, this,
+          &myapp::on_sigusr1, shared_from_this(),
           boost::asio::placeholders::error,
           _2));
       
       m_usr2_handler.handle(SIGUSR2);
       m_usr2_handler.async_wait(
         boost::bind(
-          &myapp::on_sigint, this,
+          &myapp::on_sigint, shared_from_this(),
           boost::asio::placeholders::error,
           _2));
       
@@ -164,15 +161,13 @@ class myapp : public boost::enable_shared_from_this<myapp>
         boost::posix_time::seconds(5));
       m_timer.async_wait(
         boost::bind(
-          &myapp::on_timeout, this,
+          &myapp::on_timeout, shared_from_this(),
           boost::asio::placeholders::error,
           shared_from_this()));
       }
     
   public:
-    void on_timeout(
-        const boost::system::error_code& ec,
-        boost::shared_ptr<myapp> self)
+    void on_timeout(const boost::system::error_code& ec)
       {
       if (ec)
         {
@@ -195,9 +190,8 @@ class myapp : public boost::enable_shared_from_this<myapp>
         boost::posix_time::seconds(5));
       m_timer.async_wait(
         boost::bind(
-          &myapp::on_timeout, this,
-          boost::asio::placeholders::error,
-          shared_from_this()));
+          &myapp::on_timeout, shared_from_this(),
+          boost::asio::placeholders::error));
       }
     
   public:

@@ -50,9 +50,9 @@ CC              = g++
 ifeq ($(ARCH), x86_64)
 arch_CPPFLAGS   =
 else ifeq ($(ARCH), i386)
-arch_CPPFLAGS   = -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE
+arch_CPPFLAGS   = -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64
 else ifeq ($(ARCH), i686)
-arch_CPPFLAGS   = -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE
+arch_CPPFLAGS   = -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64
 else
 $(error target ${ARCH} not supported)
 endif
@@ -78,8 +78,8 @@ dev_LDFLAGS     = $(base_LDFLAGS)
 build_LDFLAGS   = $(base_LDFLAGS)
 
 base_LIBS       = -lpthread
-dev_LIBS        = $(base_LIBS)
-build_LDFLAGS   = $(base_LIBS)
+dev_LIBS        = $(base_LIBS) -lboost_system-mt -lboost_thread-mt -lboost_program_options-mt
+build_LDFLAGS   = $(base_LIBS) -lboost_system-mt -lboost_thread-mt -lboost_program_options-mt
 
 
 ###############################################################################
@@ -106,8 +106,8 @@ build_CPPFLAGS  += -isystem $(BOOSTDIR)/include
 dev_LDFLAGS     += -L$(BOOSTDIR)$(arch_LIB) -Wl,-rpath=$(BOOSTDIR)$(arch_LIB)
 build_LDFLAGS   += -L$(BOOSTDIR)$(arch_LIB) -Wl,-rpath=$(BOOSTDIR)$(arch_LIB)
 endif
-dev_LIBS        += -lboost_system-mt -lboost_filesystem-mt -lboost_thread-mt
-build_LIBS      += -lboost_system-mt -lboost_filesystem-mt -lboost_thread-mt
+dev_LIBS        += -lboost_system-mt -lboost_filesystem-mt -lboost_thread-mt -lboost_program_options-mt
+build_LIBS      += -lboost_system-mt -lboost_filesystem-mt -lboost_thread-mt -lboost_program_options-mt
 
 
 ##########################################################################
@@ -143,7 +143,7 @@ dirs:
 	mkdir -p $(OBJDIR) $(SODIR) $(EXEDIR)
 
 clean-objs:
-	rm -rf $(OBJDIR)
+	rm -rf $(OBJDIR)/*
 
 clean:
 	@startdir=$(PWD)
