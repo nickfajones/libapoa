@@ -10,17 +10,9 @@
 ###############################################################################
  */
 
-#include <sys/types.h>
 #include <signal.h>
 
-#include <map>
-
 #include <boost/noncopyable.hpp>
-#include <boost/system/error_code.hpp>
-#include <boost/function.hpp>
-#include <boost/bind.hpp>
-#include <boost/thread.hpp>
-#include <boost/asio.hpp>
 
 #include <libapoa/common.hpp>
 #include <libapoa/thread_handler_impl.hpp>
@@ -30,10 +22,10 @@ namespace apoa
 {
 
 //#############################################################################
-static const unsigned int thread_process_shutdown_countdown_default = 30;
 static const unsigned int thread_child_shutdown_countdown_default = 10;
+static const unsigned int thread_process_shutdown_countdown_default = 30;
 
-static int thread_process_retval_ = 0;
+extern int thread_process_retval_;
 
 
 
@@ -87,25 +79,6 @@ thread_handler_impl::thread_handler_impl()
 
 thread_handler_impl::~thread_handler_impl()
   {
-  }
-
-//#############################################################################
-void thread_handler_impl::process_start(
-    boost::asio::io_service& process_io_service,
-    thread_callback handler)
-  {
-  boost::shared_ptr<thread_registration> registration(
-    new thread_registration());
-  registration->tid_ = get_pid();
-  registration->is_process_ = true;
-  registration->shutdown_countdown_ =
-    thread_process_shutdown_countdown_default;
-  registration->thread_io_service_ = &process_io_service;
-  registration->start_handler_ = handler;
-  
-  thread_main(registration);
-  
-  thread_process_retval_ = registration->retval_;
   }
 
 //#############################################################################
@@ -209,16 +182,30 @@ void thread_handler_impl::shutdown_thread(pid_t tid, int retval)
   }
 
 //#############################################################################
+void thread_handler_impl::register_main_thread(
+    boost::asio::io_service& process_io_service,
+    apoa::application_callback handler)
+  {
+  boost::shared_ptr<thread_registration> registration(
+    new thread_registration());
+  registration->tid_ = get_pid();
+  registration->is_process_ = true;
+  registration->shutdown_countdown_ =
+    thread_process_shutdown_countdown_default;
+  registration->thread_io_service_ = &process_io_service;
+  registration->start_handler_ = handler;
+
+  thread_main(registration);
+
+  thread_process_retval_ = registration->retval_;
+  }
+
+//#############################################################################
 boost::asio::io_service& thread_handler_impl::get_io_service(pid_t tid)
   {
   boost::unique_lock<boost::mutex> threads_lock(threads_mutex_);
   
   return *threads_[tid]->thread_io_service_;
-  }
-    
-int thread_handler_impl::get_process_retval()
-  {
-  return thread_process_retval_;
   }
 
 //#############################################################################
@@ -230,20 +217,20 @@ void thread_handler_impl::thread_main(
     registration->tid_ = get_tid();
     registration->thread_io_service_ =
       new boost::asio::io_service();
-      
+
     sigset_t block_sigset;
     sigfillset(&block_sigset);
-    
+
     pthread_sigmask(SIG_SETMASK, &block_sigset, NULL);
     }
-  
+
   registration->thread_work_ =
     new boost::asio::io_service::work(
       *registration->thread_io_service_);
-  
+
     {
     boost::unique_lock<boost::mutex> threads_lock(threads_mutex_);
-    
+
     threads_.insert(
       std::pair<pid_t, boost::shared_ptr<thread_registration> >(
         registration->tid_, registration));
@@ -251,7 +238,7 @@ void thread_handler_impl::thread_main(
 
     {
     boost::system::error_code ec;
-    
+
     registration->thread_io_service_->post(
       boost::bind(registration->start_handler_, ec));
     registration->start_handler_ = NULL;
@@ -266,7 +253,7 @@ void thread_handler_impl::thread_main(
     {
     delete registration->thread_io_service_;
     registration->thread_io_service_ = NULL;
-    
+
     boost::unique_lock<boost::mutex> threads_lock(threads_mutex_);
 
     threads_[get_pid()]->thread_io_service_->post(

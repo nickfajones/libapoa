@@ -16,6 +16,7 @@
 #include <boost/asio.hpp>
 
 #include <libapoa/common.hpp>
+#include <libapoa/application_handler.hpp>
 #include <libapoa/thread_handler.hpp>
 #include <libapoa/signal_handler.hpp>
 
@@ -25,8 +26,8 @@ class mythread : public boost::enable_shared_from_this<mythread>
   {
   public:
     explicit mythread(boost::asio::io_service& io_service) :
-      m_timer(io_service),
-      m_usr1_handler(io_service)
+      m_timer(io_service)
+      //m_usr1_handler(io_service)
       {
       APOA_PRINT("mythread::mythread");
       }
@@ -35,7 +36,7 @@ class mythread : public boost::enable_shared_from_this<mythread>
       {
       APOA_PRINT("mythread::~mythread");
       
-      m_usr1_handler.cancel();
+      //m_usr1_handler.cancel();
       m_timer.cancel();
       
       apoa::shutdown_thread(0);
@@ -53,13 +54,14 @@ class mythread : public boost::enable_shared_from_this<mythread>
         boost::bind(
           &mythread::on_timeout, shared_from_this(),
           boost::asio::placeholders::error));
-      
+/*
       m_usr1_handler.handle(SIGUSR1);
       m_usr1_handler.async_wait(
         boost::bind(
           &mythread::on_sigusr1, shared_from_this(),
           boost::asio::placeholders::error,
           _2));
+*/
       }
     
   public:
@@ -82,6 +84,7 @@ class mythread : public boost::enable_shared_from_this<mythread>
       }
     
   public:
+/*
     void on_sigusr1(
         const boost::system::error_code& ec, apoa::siginfo sigusr1_info)
       {
@@ -95,11 +98,11 @@ class mythread : public boost::enable_shared_from_this<mythread>
       m_usr1_handler.cancel();
       m_timer.cancel();
       }
-    
+*/
   private:
     boost::asio::deadline_timer m_timer;
     
-    apoa::signal_handler m_usr1_handler;
+    //apoa::signal_handler m_usr1_handler;
   };
 
 
@@ -109,7 +112,7 @@ class myapp : public boost::enable_shared_from_this<myapp>
   {
   public:
     explicit myapp(boost::asio::io_service& io_service) :
-      m_threads_started(1),
+      m_threads_started(3),
       m_timer(io_service),
       m_thread_handler(io_service),
       m_int_handler(io_service),
@@ -122,11 +125,6 @@ class myapp : public boost::enable_shared_from_this<myapp>
     ~myapp()
       {
       APOA_PRINT("myapp::~myapp");
-      
-      m_usr2_handler.cancel();
-      m_usr1_handler.cancel();
-      m_int_handler.cancel();
-      m_timer.cancel();
       
       apoa::shutdown_process(0);
       }
@@ -142,7 +140,7 @@ class myapp : public boost::enable_shared_from_this<myapp>
           &myapp::on_sigint, shared_from_this(),
           boost::asio::placeholders::error,
           _2));
-      
+
       m_usr1_handler.handle(SIGUSR1);
       m_usr1_handler.async_wait(
         boost::bind(
@@ -156,14 +154,13 @@ class myapp : public boost::enable_shared_from_this<myapp>
           &myapp::on_sigint, shared_from_this(),
           boost::asio::placeholders::error,
           _2));
-      
+
       m_timer.expires_from_now(
         boost::posix_time::seconds(5));
       m_timer.async_wait(
         boost::bind(
           &myapp::on_timeout, shared_from_this(),
-          boost::asio::placeholders::error,
-          shared_from_this()));
+          boost::asio::placeholders::error));
       }
     
   public:
@@ -186,6 +183,11 @@ class myapp : public boost::enable_shared_from_this<myapp>
         m_threads_started--;
         }
       
+      if (m_threads_started == 1)
+        {
+        //sleep(5);
+        }
+
       m_timer.expires_from_now(
         boost::posix_time::seconds(5));
       m_timer.async_wait(
@@ -195,6 +197,7 @@ class myapp : public boost::enable_shared_from_this<myapp>
       }
     
   public:
+
     void on_sigusr1(
         const boost::system::error_code& ec, apoa::siginfo sigusr1_info)
       {
@@ -210,7 +213,7 @@ class myapp : public boost::enable_shared_from_this<myapp>
         return;
         }
       }
-    
+
     void on_sigint(
         const boost::system::error_code& ec, apoa::siginfo sigint_info)
       {
@@ -218,11 +221,7 @@ class myapp : public boost::enable_shared_from_this<myapp>
       
       if (ec)
         {
-        m_usr2_handler.cancel();
-        m_usr1_handler.cancel();
-        m_int_handler.cancel();
-        m_timer.cancel();
-        
+        APOA_PRINT("  error %s", ec.message().data());
         return;
         }
       
@@ -250,9 +249,15 @@ class myapp : public boost::enable_shared_from_this<myapp>
 int main(int argc, char** argv)
   {
   boost::asio::io_service io_service;
-  apoa::thread_handler process_handler(io_service);
-  process_handler.process_init(argc, argv);
+  apoa::application_handler application_handler(io_service);
+
+  boost::program_options::options_description desc("test options");
+  desc.add_options()
+    ("help", "");
+
+  application_handler.process_init(desc, argc, argv);
+  application_handler.set_watchdog(2);
   
-  return process_handler.process_start(
+  return application_handler.process_start(
     &myapp::on_application_start, static_cast<myapp*>(NULL));
   }

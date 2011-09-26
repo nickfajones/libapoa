@@ -12,9 +12,6 @@
 #ifndef LIBAPOA_BASIC_THREAD_HANDLER_SERVICE_HPP
 #define LIBAPOA_BASIC_THREAD_HANDLER_SERVICE_HPP
 
-#include <boost/shared_ptr.hpp>
-#include <boost/asio.hpp>
-
 #include <libapoa/thread_handler_impl.hpp>
 
 
@@ -38,17 +35,7 @@ class basic_thread_handler_service :
     virtual void shutdown_service();
     void construct(implementation_type& impl);
     void destroy(implementation_type& impl);
-    
-  public:
-    template <typename ProcessStartHandler>
-    void process_start(
-        implementation_type& impl,
-        boost::asio::io_service& process_io_service,
-        ProcessStartHandler handler)
-      {
-      impl->process_start(process_io_service, handler);
-      }
-    
+
   public:
     template <typename CreateThreadHandler>
     void create_thread(
@@ -69,17 +56,18 @@ class basic_thread_handler_service :
       impl->shutdown_notify(io_service_, tid, handler);
       }
       */
-    
+
   public:
     boost::asio::io_service& get_thread_io_service(
       implementation_type& impl, pid_t tid);
     
-  public:
     void shutdown_thread(
       implementation_type& impl, pid_t tid, int retval);
-    
-  public:
-    int get_process_retval(implementation_type& impl);
+
+    void register_main_thread(
+      implementation_type& impl,
+      boost::asio::io_service& process_io_service,
+      apoa::application_callback handler);
   };
 
 }; // namespace apoa

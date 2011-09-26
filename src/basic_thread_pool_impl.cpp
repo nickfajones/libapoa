@@ -55,6 +55,7 @@ basic_thread_pool_impl::basic_thread_pool_impl(
     boost::asio::io_service& io_service) :
   thread_handler_(io_service),
   pool_(),
+  pool_size_(0),
   iter_(pool_.end())
   {
   }
@@ -64,19 +65,22 @@ basic_thread_pool_impl::~basic_thread_pool_impl()
   }
 
 //#############################################################################
-void basic_thread_pool_impl::create_pool(uint32_t size)
+void basic_thread_pool_impl::create_pool(
+    uint32_t size, boost::system::error_code& ec)
   {
   if (size == 0)
     {
     return;
     }
 
-  boost::unique_lock<boost::mutex> pool_lock(pool_mutex_);
-  if (pool_.size() > 0)
+  boost::lock_guard<boost::mutex> pool_lock(pool_mutex_);
+  if (pool_.size() > 0 || pool_size_ != 0)
     {
-    BOOST_ASSERT(0 && "basic_thread_pool_impl: pool already created");
+    ec.assign(EALREADY, boost::system::get_system_category());
+    return;
     }
-  pool_lock.unlock();
+
+  pool_size_ = size;
 
   for (uint32_t i = 0; i < size; i++)
     {
@@ -92,6 +96,7 @@ void basic_thread_pool_impl::destroy_pool()
   {
   boost::lock_guard<boost::mutex> pool_lock(pool_mutex_);
 
+  pool_size_ = 0;
   if (pool_.size() == 0)
     {
     return;
@@ -101,13 +106,23 @@ void basic_thread_pool_impl::destroy_pool()
   }
 
 //#############################################################################
-boost::asio::io_service& basic_thread_pool_impl::get_thread_service()
+boost::asio::io_service& basic_thread_pool_impl::get_thread_service(
+    boost::system::error_code& ec)
   {
   boost::lock_guard<boost::mutex> pool_lock(pool_mutex_);
 
   if (pool_.size() == 0)
     {
-    BOOST_ASSERT(0 && "basic_thread_pool_impl: pool not created");
+    if (pool_size_ != 0)
+      {
+      ec.assign(EAGAIN, boost::system::get_system_category());
+      }
+    else
+      {
+      ec.assign(ENODATA, boost::system::get_system_category());
+      }
+
+    return thread_handler_.get_io_service();
     }
 
   if (iter_ == pool_.end())
@@ -131,8 +146,8 @@ boost::asio::io_service& basic_thread_pool_impl::get_thread_service()
 void basic_thread_pool_impl::register_thread(
     boost::shared_ptr<thread_pool_ref> ref)
   {
-  boost::lock_guard<boost::mutex> pool_lock(pool_mutex_);
   pid_t tid = apoa::get_tid();
+  boost::lock_guard<boost::mutex> pool_lock(pool_mutex_);
 
   BOOST_ASSERT(pool_.find(tid) == pool_.end() &&
     "basic_thread_pool_impl: create existing thread id");

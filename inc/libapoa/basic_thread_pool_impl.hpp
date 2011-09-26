@@ -59,9 +59,10 @@ class basic_thread_pool_impl :
     ~basic_thread_pool_impl();
 
   public:
-    void create_pool(uint32_t size);
+    void create_pool(uint32_t size, boost::system::error_code& ec);
     void destroy_pool();
-    boost::asio::io_service& get_thread_service();
+    boost::asio::io_service& get_thread_service(
+      boost::system::error_code& ec);
 
   private:
     void register_thread(boost::shared_ptr<thread_pool_ref> ref);
@@ -70,6 +71,7 @@ class basic_thread_pool_impl :
     apoa::thread_handler thread_handler_;
 
     threads_map pool_;
+    uint32_t pool_size_;
     boost::mutex pool_mutex_;
     threads_map::iterator iter_;
   };

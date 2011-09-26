@@ -40,8 +40,6 @@ class process_handler_impl :
     ~process_handler_impl();
     
   public:
-    void deactivate();
-    
     void launch(
       basic_process_context& context, boost::system::error_code& ec);
     void exec(
@@ -129,7 +127,6 @@ class process_handler_impl :
     basic_process_context context_;
     basic_process_exit_callback wait_exit_callback_;
     
-    bool exit_callback_;
     bool child_active_;
     bool async_reading_;
     bool async_writing_;

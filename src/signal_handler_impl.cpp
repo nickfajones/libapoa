@@ -29,7 +29,7 @@
 #include <boost/system/error_code.hpp>
 #include <boost/asio.hpp>
 
-#include "thread_handler.hpp"
+#include "application_handler.hpp"
 #include "basic_signal_handler_siginfo.hpp"
 #include "signal_handler_impl.hpp"
 

@@ -27,9 +27,10 @@ class basic_thread_pool :
     virtual ~basic_thread_pool();
 
   public:
-    void create_pool(uint32_t size);
+    void create_pool(uint32_t size, boost::system::error_code& ec);
     void destroy_pool();
-    boost::asio::io_service& get_thread_service();
+    boost::asio::io_service& get_thread_service(
+      boost::system::error_code& ec);
   };
 
 }; // namespace apoa

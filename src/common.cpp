@@ -21,7 +21,8 @@
 #include <mach/mach_init.h>
 #endif
 
-#include "common.hpp"
+#include <libapoa/common.hpp>
+#include <libapoa/basic_thread_handler.hpp>
 
 
 namespace apoa
@@ -122,6 +123,20 @@ pid_t get_tid()
 bool is_process_thread()
   {
   return (get_tid() == get_pid());
+  }
+
+
+
+//#############################################################################
+boost::asio::io_service& get_io_service(pid_t tid)
+  {
+  return basic_thread_handler(get_process_io_service()).get_io_service(tid);
+  }
+
+//#############################################################################
+void shutdown_thread(pid_t tid, int retval)
+  {
+  basic_thread_handler(get_process_io_service()).shutdown_thread(tid, retval);
   }
 
 }; // namespace apoa

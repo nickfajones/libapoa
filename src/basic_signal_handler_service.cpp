@@ -15,7 +15,7 @@
 #include <boost/asio.hpp>
 
 #include "common.hpp"
-#include "thread_handler.hpp"
+#include "application_handler.hpp"
 #include "basic_signal_handler_siginfo.hpp"
 #include "basic_signal_handler_service.hpp"
 #include "signal_handler_impl.hpp"

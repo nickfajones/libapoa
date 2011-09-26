@@ -28,9 +28,10 @@ basic_thread_pool::~basic_thread_pool()
   }
 
 //#############################################################################
-void basic_thread_pool::create_pool(uint32_t size)
+void basic_thread_pool::create_pool(
+    uint32_t size, boost::system::error_code& ec)
   {
-  this->service.create_pool(this->implementation, size);
+  this->service.create_pool(this->implementation, size, ec);
   }
 
 //#############################################################################
@@ -40,8 +41,9 @@ void basic_thread_pool::destroy_pool()
   }
 
 //#############################################################################
-boost::asio::io_service& basic_thread_pool::get_thread_service()
+boost::asio::io_service& basic_thread_pool::get_thread_service(
+    boost::system::error_code& ec)
   {
-  return this->service.get_thread_service(this->implementation);
+  return this->service.get_thread_service(this->implementation, ec);
   }
 }; // namespace apoa

@@ -61,6 +61,15 @@ void basic_thread_handler_service::destroy(implementation_type& impl)
   }
 
 //#############################################################################
+void basic_thread_handler_service::register_main_thread(
+    implementation_type& impl,
+    boost::asio::io_service& process_io_service,
+    apoa::application_callback handler)
+  {
+  impl->register_main_thread(process_io_service, handler);
+  }
+
+//#############################################################################
 boost::asio::io_service& basic_thread_handler_service::get_thread_io_service(
     implementation_type& impl, pid_t tid)
   {
@@ -72,13 +81,6 @@ void basic_thread_handler_service::shutdown_thread(
     implementation_type& impl, pid_t tid, int retval)
   {
   impl->shutdown_thread(tid, retval);
-  }
-
-//#############################################################################
-int basic_thread_handler_service::get_process_retval(
-    implementation_type& impl)
-  {
-  return impl->get_process_retval();
   }
 
 }; // namespace apoa

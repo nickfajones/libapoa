@@ -2,7 +2,6 @@
 #
 # Copyright (C) 2011 Network Box Corporation Limited
 #   nick.jones@network-box.com
-#   jeff.he@network-box.com
 #
 # Distributed under the Boost Software License, Version 1.0. (See accompanying
 # file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -10,13 +9,18 @@
 ###############################################################################
  */
 
-#ifndef LIBAPOA_APOA_HPP
-#define LIBAPOA_APOA_HPP
+#ifndef LIBAPOA_APPLICATION_HANDLER_HPP
+#define LIBAPOA_APPLICATION_HANDLER_HPP
 
-#include <libapoa/application_handler.hpp>
-#include <libapoa/thread_handler.hpp>
-#include <libapoa/thread_pool.hpp>
-#include <libapoa/signal_handler.hpp>
-#include <libapoa/process_handler.hpp>
+#include <libapoa/basic_application_handler.hpp>
 
-#endif // LIBAPOA_APOA_HPP
+
+namespace apoa
+{
+
+//########################################################################
+typedef basic_application_handler application_handler;
+
+}; // namespace apoa
+
+#endif // LIBAPOA_APPLICATION_HANDLER_HPP

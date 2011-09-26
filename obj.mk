@@ -10,6 +10,9 @@
 
 LIBAPOA_OBJS += \
   $(OBJDIR)/common.o \
+  $(OBJDIR)/basic_application_handler.o \
+  $(OBJDIR)/basic_application_handler_service.o \
+  $(OBJDIR)/application_handler_impl.o \
   $(OBJDIR)/basic_thread_handler.o \
   $(OBJDIR)/basic_thread_handler_service.o \
   $(OBJDIR)/thread_handler_impl.o \
@@ -25,6 +28,20 @@ LIBAPOA_OBJS += \
 
 ###############################################################################
 $(OBJDIR)/common.o: $(SRCDIR)/common.cpp $(INCDIR)/common.hpp
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(OPT) $< -c -o $@
+
+
+###############################################################################
+$(OBJDIR)/basic_application_handler.o: $(SRCDIR)/basic_application_handler.cpp \
+  $(INCDIR)/basic_application_handler.hpp
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(OPT) $< -c -o $@
+
+$(OBJDIR)/basic_application_handler_service.o: $(SRCDIR)/basic_application_handler_service.cpp \
+  $(INCDIR)/basic_application_handler_service.hpp
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(OPT) $< -c -o $@
+
+$(OBJDIR)/application_handler_impl.o: $(SRCDIR)/application_handler_impl.cpp \
+  $(INCDIR)/application_handler_impl.hpp
 	$(CC) $(CFLAGS) $(CPPFLAGS) $(OPT) $< -c -o $@
 
 

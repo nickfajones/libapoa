@@ -45,7 +45,6 @@ void basic_process_handler_service::construct(implementation_type& impl)
 
 void basic_process_handler_service::destroy(implementation_type& impl)
   {
-  impl->deactivate();
   impl.reset();
   }
 

@@ -39,9 +39,11 @@ class basic_thread_pool_service :
     void destroy(implementation_type& impl);
 
   public:
-    void create_pool(implementation_type& impl, uint32_t size);
+    void create_pool(implementation_type& impl,
+      uint32_t size, boost::system::error_code& ec);
     void destroy_pool(implementation_type& impl);
-    boost::asio::io_service& get_thread_service(implementation_type& impl);
+    boost::asio::io_service& get_thread_service(
+      implementation_type& impl, boost::system::error_code& ec);
   };
 
 }; // namespace apoa

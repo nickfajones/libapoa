@@ -22,6 +22,7 @@
 #include <boost/bind.hpp>
 #include <boost/system/error_code.hpp>
 #include <boost/asio.hpp>
+#include <boost/thread.hpp>
 
 #include <libapoa/basic_signal_handler_siginfo.hpp>
 

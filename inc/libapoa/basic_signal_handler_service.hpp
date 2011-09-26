@@ -17,7 +17,7 @@
 #include <boost/asio.hpp>
 
 #include <libapoa/common.hpp>
-#include <libapoa/thread_handler.hpp>
+#include <libapoa/application_handler.hpp>
 #include <libapoa/basic_signal_handler_siginfo.hpp>
 #include <libapoa/signal_handler_impl.hpp>
 

@@ -17,11 +17,13 @@
 
 #include <map>
 
-#include <boost/system/error_code.hpp>
-#include <boost/function.hpp>
-#include <boost/bind.hpp>
-#include <boost/thread.hpp>
 #include <boost/asio.hpp>
+#include <boost/bind.hpp>
+#include <boost/function.hpp>
+#include <boost/system/error_code.hpp>
+#include <boost/thread.hpp>
+
+#include <libapoa/common.hpp>
 
 
 namespace apoa
@@ -43,26 +45,20 @@ class thread_handler_impl
     ~thread_handler_impl();
     
   public:
-    void process_start(
-      boost::asio::io_service& process_io_service,
-      thread_callback handler);
-    
-  public:
     void create_thread(
       boost::asio::io_service& parent_io_service,
       thread_callback handler);
     
-  public:
     void shutdown_thread(pid_t tid, int retval);
     
-  public:
     boost::asio::io_service& get_io_service(pid_t tid);
-    int get_process_retval();
-    
-  private:
+
+    void register_main_thread(
+      boost::asio::io_service& process_io_service,
+      apoa::application_callback handler);
     void thread_main(
         boost::shared_ptr<thread_registration> registration);
-    
+
   private:
     void shutdown_thread1(
         boost::shared_ptr<thread_registration> registration);

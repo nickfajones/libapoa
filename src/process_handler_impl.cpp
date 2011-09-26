@@ -30,7 +30,7 @@ process_handler_impl::process_handler_impl(
   read_descriptor_(io_service),
   write_descriptor_(io_service),
   sigchld_handler_(io_service),
-  exit_callback_(false),
+  wait_exit_callback_(NULL),
   child_active_(false),
   async_reading_(false),
   async_writing_(false)
@@ -45,13 +45,6 @@ process_handler_impl::~process_handler_impl()
     {
     boost::asio::detail::throw_error(ec, "~process_handler_impl");
     }
-  }
-
-//#############################################################################
-void process_handler_impl::deactivate()
-  {
-  exit_callback_ = false;
-  wait_exit_callback_ = NULL;
   }
 
 //#############################################################################
@@ -192,11 +185,6 @@ void process_handler_impl::exec(
 //#############################################################################
 void process_handler_impl::cancel(boost::system::error_code& ec)
   {
-  if (!child_active_)
-    {
-    return;
-    }
-  
   if (read_descriptor_.is_open())
     {
     // Cancel read asynchronous operations
@@ -212,17 +200,14 @@ void process_handler_impl::cancel(boost::system::error_code& ec)
     async_writing_ = false;
     }
   
-  sigchld_handler_.cancel(ec);
-  
+  if (!child_active_)
+    {
+    return;
+    }
+
   // Kill child process
   kill(context_.handle(), SIGKILL);
-  
   child_active_ = false;
-  
-  // Cancel signal handler
-  
-  wait_exit_callback_ = NULL;
-  exit_callback_ = false;
   }
 
 //#############################################################################
@@ -241,7 +226,6 @@ void process_handler_impl::signal(
 void process_handler_impl::async_wait_exit(
   basic_process_exit_callback callback)
   {
-  exit_callback_ = true;
   wait_exit_callback_ = callback;
   }
 
@@ -366,41 +350,72 @@ void process_handler_impl::async_pipe_write_handle(
 void process_handler_impl::sigchld_handle(
     const boost::system::error_code& ec, apoa::siginfo sigint_info)
   {
+  // Verify error
+  if (ec)
+    {
+    if (ec == boost::asio::error::operation_aborted)
+      {
+      return;
+      }
+
+    if (wait_exit_callback_ != NULL)
+      {
+      io_service_.post(
+        boost::bind(wait_exit_callback_, ec, sigint_info.bsi_status));
+
+      wait_exit_callback_ = NULL;
+      }
+
+    return;
+    }
+
   int status = 0;
   boost::system::error_code new_ec;
 
-  do
+  // Wait
+  pid_t who_died = waitpid(context_.handle(), &status, WNOHANG);
+
+  // waitpid has error
+  if (who_died == -1)
     {
-    // Verify error
-    if (ec)
-      {
-      if (exit_callback_)
-        {
-        io_service_.post(
-          boost::bind(wait_exit_callback_, ec, sigint_info.bsi_status));
-        
-        wait_exit_callback_ = NULL;
-        exit_callback_ = false;
-        }
-      break;
-      }
+    new_ec.assign(errno, boost::system::get_system_category());
+    }
 
-    // Wait
-    if (waitpid(context_.handle(), &status, 0) == -1)
-      {
-      new_ec.assign(errno, boost::system::get_system_category());
-      }
+  // Dead child process does not belong to current thread
+  if (who_died == 0)
+    {
+    sigchld_handler_.handle(SIGCHLD);
+    sigchld_handler_.async_wait(boost::bind(
+      &process_handler_impl::sigchld_handle, shared_from_this(),
+      boost::asio::placeholders::error, _2));
 
-    if (exit_callback_)
-      {
-      io_service_.post(
-        boost::bind(wait_exit_callback_, new_ec, sigint_info.bsi_status));
-      
-      wait_exit_callback_ = NULL;
-      exit_callback_ = false;
-      }
-    } while (false);
+    return;
+    }
 
+  // No matter error or not, no matter killed by user or exception,
+  // now child process is to dead
+  if (child_active_)
+    {
+    child_active_ = false;
+    }
+
+  // Call child process exit callback
+  if (wait_exit_callback_ != NULL)
+    {
+    io_service_.post(
+      boost::bind(wait_exit_callback_, new_ec, sigint_info.bsi_status));
+
+    io_service_.post(
+      boost::bind(
+        wait_exit_callback_,
+          boost::asio::error::operation_aborted,
+          0));
+
+    wait_exit_callback_ = NULL;
+    }
+
+  boost::system::error_code ec2;
+  sigchld_handler_.cancel(ec2);
   }
 
 //#############################################################################

@@ -45,9 +45,9 @@ void basic_thread_pool_service::destroy(implementation_type& impl)
 
 //#############################################################################
 void basic_thread_pool_service::create_pool(
-    implementation_type& impl, uint32_t size)
+    implementation_type& impl, uint32_t size, boost::system::error_code& ec)
   {
-  impl->create_pool(size);
+  impl->create_pool(size, ec);
   }
 
 //#############################################################################
@@ -58,8 +58,8 @@ void basic_thread_pool_service::destroy_pool(implementation_type& impl)
 
 //#############################################################################
 boost::asio::io_service& basic_thread_pool_service::get_thread_service(
-    implementation_type& impl)
+    implementation_type& impl, boost::system::error_code& ec)
   {
-  return impl->get_thread_service();
+  return impl->get_thread_service(ec);
   }
 }; // namespace apoa

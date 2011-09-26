@@ -87,12 +87,14 @@ ifneq (,$(shell [ -f dev.mk ] && echo 1))
 include dev.mk
 endif
 
+
 ifeq ($(ASIODIR),)
 ASIODIR         = /usr
 endif
 
 ifneq ($(ASIODIR),/usr)
-dev_CPPFLAGS    += -isystem $(ASIODIR)
+dev_CPPFLAGS    += -isystem $(ASIODIR)/include
+build_CPPFLAGS  += -isystem $(ASIODIR)/include
 endif
 
 
