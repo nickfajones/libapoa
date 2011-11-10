@@ -83,7 +83,13 @@ std::string& basic_process_context::executable_file_path()
 
 void basic_process_context::exectuable_file_path(const std::string& file_path)
   {
+  if (details_->args.size() > 0)
+    {
+    details_->args.pop_front();
+    }
+  
   details_->executable_file_path = file_path;
+  details_->args.push_front(file_path);
   }
 
 //#############################################################################

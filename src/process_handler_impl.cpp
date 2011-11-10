@@ -165,7 +165,7 @@ void process_handler_impl::exec(
   // Execute when no environment set
   if (context_.environment().size() == 0)
     {
-    if (execv(context_.executable_file_path().data(),
+    if (execv(context_.executable_file_path().c_str(),
           context_.get_args().get()) == -1)
       {
       ec.assign(errno, boost::system::get_system_category());
@@ -175,7 +175,7 @@ void process_handler_impl::exec(
     }
 
   // Execute when use define some environment
-  if (execve(context_.executable_file_path().data(),
+  if (execve(context_.executable_file_path().c_str(),
         context_.get_args().get(), context_.get_envp().get()) == -1)
     {
     ec.assign(errno, boost::system::get_system_category());
@@ -312,14 +312,14 @@ void process_handler_impl::exec_in_child(int pipe_one[], int pipe_two[])
     if (context_.environment().size() == 0)
       {
       execv(
-        context_.executable_file_path().data(),
+        context_.executable_file_path().c_str(),
         context_.get_args().get());
       }
     else
       {
       // Execute when use define some environment
       execve(
-        context_.executable_file_path().data(),
+        context_.executable_file_path().c_str(),
         context_.get_args().get(), context_.get_envp().get());
       }
     }
