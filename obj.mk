@@ -1,6 +1,7 @@
 ###############################################################################
 #
-# Copyright (C) 2011 Network Box Corporation Limited
+# Copyright (C) 2012 Network Box Corporation Limited
+#   Nick Jones <nick.jones@network-box.com>
 #
 # Distributed under the Boost Software License, Version 1.0. (See accompanying
 # file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -10,12 +11,7 @@
 
 LIBAPOA_OBJS += \
   $(OBJDIR)/common.o \
-  $(OBJDIR)/basic_application_handler.o \
-  $(OBJDIR)/basic_application_handler_service.o \
-  $(OBJDIR)/application_handler_impl.o \
-  $(OBJDIR)/basic_thread_handler.o \
-  $(OBJDIR)/basic_thread_handler_service.o \
-  $(OBJDIR)/thread_handler_impl.o \
+  $(OBJDIR)/thread_handler.o \
   $(OBJDIR)/basic_thread_pool.o \
   $(OBJDIR)/basic_thread_pool_service.o \
   $(OBJDIR)/basic_thread_pool_impl.o \
@@ -32,30 +28,8 @@ $(OBJDIR)/common.o: $(SRCDIR)/common.cpp $(INCDIR)/common.hpp
 
 
 ###############################################################################
-$(OBJDIR)/basic_application_handler.o: $(SRCDIR)/basic_application_handler.cpp \
-  $(INCDIR)/basic_application_handler.hpp
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(OPT) $< -c -o $@
-
-$(OBJDIR)/basic_application_handler_service.o: $(SRCDIR)/basic_application_handler_service.cpp \
-  $(INCDIR)/basic_application_handler_service.hpp
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(OPT) $< -c -o $@
-
-$(OBJDIR)/application_handler_impl.o: $(SRCDIR)/application_handler_impl.cpp \
-  $(INCDIR)/application_handler_impl.hpp
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(OPT) $< -c -o $@
-
-
-###############################################################################
-$(OBJDIR)/basic_thread_handler.o: $(SRCDIR)/basic_thread_handler.cpp \
-  $(INCDIR)/basic_thread_handler.hpp
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(OPT) $< -c -o $@
-
-$(OBJDIR)/basic_thread_handler_service.o: $(SRCDIR)/basic_thread_handler_service.cpp \
-  $(INCDIR)/basic_thread_handler_service.hpp
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(OPT) $< -c -o $@
-
-$(OBJDIR)/thread_handler_impl.o: $(SRCDIR)/thread_handler_impl.cpp \
-  $(INCDIR)/thread_handler_impl.hpp
+$(OBJDIR)/thread_handler.o: $(SRCDIR)/thread_handler.cpp $(INCDIR)/thread_handler.hpp \
+  $(INCDIR)/common.hpp
 	$(CC) $(CFLAGS) $(CPPFLAGS) $(OPT) $< -c -o $@
 
 
@@ -69,7 +43,7 @@ $(OBJDIR)/basic_thread_pool_service.o: $(SRCDIR)/basic_thread_pool_service.cpp \
 	$(CC) $(CFLAGS) $(CPPFLAGS) $(OPT) $< -c -o $@
 
 $(OBJDIR)/basic_thread_pool_impl.o: $(SRCDIR)/basic_thread_pool_impl.cpp \
-  $(INCDIR)/basic_thread_pool_impl.hpp
+  $(INCDIR)/basic_thread_pool_impl.hpp $(INCDIR)/thread_handler.hpp
 	$(CC) $(CFLAGS) $(CPPFLAGS) $(OPT) $< -c -o $@
 
 

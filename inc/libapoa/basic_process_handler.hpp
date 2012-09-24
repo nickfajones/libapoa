@@ -1,8 +1,8 @@
 /*#############################################################################
 #
-# Copyright (C) 2011 Network Box Corporation Limited
-#   nick.jones@network-box.com
-#   jeff.he@network-box.com
+# Copyright (C) 2012 Network Box Corporation Limited
+#   Nick Jones <nick.jones@network-box.com>
+#   Jeff He <jeff.he@network-box.com>
 #
 # Distributed under the Boost Software License, Version 1.0. (See accompanying
 # file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -35,7 +35,7 @@ class basic_process_handler :
       {
       }
     
-    virtual ~basic_process_handler()
+    ~basic_process_handler()
       {
       }
     

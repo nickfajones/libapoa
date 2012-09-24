@@ -1,7 +1,7 @@
 /*#############################################################################
 #
-# Copyright (C) 2011 Network Box Corporation Limited
-#   nick.jones@network-box.com
+# Copyright (C) 2012 Network Box Corporation Limited
+#   Nick Jones <nick.jones@network-box.com>
 #
 # Distributed under the Boost Software License, Version 1.0. (See accompanying
 # file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -37,37 +37,21 @@ class basic_thread_handler_service :
     void destroy(implementation_type& impl);
 
   public:
-    template <typename CreateThreadHandler>
-    void create_thread(
-        implementation_type& impl,
-        boost::asio::io_service& parent_io_service,
-        CreateThreadHandler handler)
-      {
-      impl->create_thread(
-        parent_io_service, handler);
-      }
-    
-    /*
-    template <typename ShutdownThreadHandler>
-    void async_shutdown_notify(
-        implementation_type& impl,
-        ShutdownThreadHandler handler)
-      {
-      impl->shutdown_notify(io_service_, tid, handler);
-      }
-      */
-
-  public:
     boost::asio::io_service& get_thread_io_service(
       implementation_type& impl, pid_t tid);
-    
+
+    void create_thread(
+      implementation_type& impl,
+      boost::asio::io_service& parent_io_service,
+      thread_callback cb);
     void shutdown_thread(
       implementation_type& impl, pid_t tid, int retval);
 
     void register_main_thread(
       implementation_type& impl,
-      boost::asio::io_service& process_io_service,
-      apoa::application_callback handler);
+      boost::asio::io_service& process_io_service);
+    void start_main_thread(
+      implementation_type& impl, pid_t pid, thread_callback cb);
   };
 
 }; // namespace apoa

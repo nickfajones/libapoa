@@ -57,7 +57,7 @@ else
 $(error target ${ARCH} not supported)
 endif
 
-base_CFLAGS     = -Wall -fPIC -pthread $(CFLAGS)
+base_CFLAGS     = -Wall -fPIC -pthread -std=gnu++0x $(CFLAGS)
 dev_CFLAGS      = $(base_CFLAGS) -Werror
 build_CFLAGS    = $(base_CFLAGS)
 
@@ -77,9 +77,9 @@ base_LDFLAGS    =
 dev_LDFLAGS     = $(base_LDFLAGS)
 build_LDFLAGS   = $(base_LDFLAGS)
 
-base_LIBS       = -lpthread
-dev_LIBS        = $(base_LIBS) -lboost_system-mt -lboost_thread-mt -lboost_program_options-mt
-build_LDFLAGS   = $(base_LIBS) -lboost_system-mt -lboost_thread-mt -lboost_program_options-mt
+base_LIBS       =
+dev_LIBS        = $(base_LIBS)
+build_LIBS      = $(base_LIBS)
 
 
 ###############################################################################
@@ -120,13 +120,17 @@ dev_OBJS        = $(base_OBJS)
 build_OBJS      = $(base_OBJS)
 
 
+test_LDFLAGS    = -Wl,-rpath,$(SODIR) -L$(SODIR) -lapoa
+
+
 ##########################################################################
 .PHONY: dev build dirs clean install
 
 dev: dirs
 	$(MAKE) $(dev_OBJS) \
-	  CFLAGS="$(build_CFLAGS)" OPT="$(dev_OPT)" CPPFLAGS="$(dev_CPPFLAGS)"
-	$(MAKE) $(SODIR)/libapoa.a OBJS="$(dev_OBJS)" LDOBJS="$(dev_LDOBJS)"
+	  CFLAGS="$(dev_CFLAGS)" OPT="$(dev_OPT)" CPPFLAGS="$(dev_CPPFLAGS)"
+	$(MAKE) $(SODIR)/libapoa.so OBJS="$(dev_OBJS)"
+	  LDOBJS="$(dev_LDOBJS)" LDFLAGS="$(dev_LDFLAGS)" LIBS="$(dev_LIBS)"
 
 build: dirs
 	$(MAKE) $(build_OBJS) \
@@ -137,7 +141,7 @@ build: dirs
 apoaapp: dev
 	$(MAKE) $(EXEDIR)/apoaapp \
 	  CFLAGS="$(dev_CFLAGS)" OPT="$(dev_OPT)" CPPFLAGS="$(dev_CPPFLAGS)" \
-	  LDOBJS="$(SODIR)/libapoa.a" LDFLAGS="$(dev_LDFLAGS)" LIBS="$(dev_LIBS)"
+	  LDFLAGS="$(dev_LDFLAGS) $(test_LDFLAGS)" LIBS="$(dev_LIBS)"
 
 
 ##############################################################################
@@ -159,7 +163,7 @@ clean:
 install:
 	mkdir -p $(DESTDIR)$(PREFIX)$(arch_LIB)
 	install -m 0755 $(SODIR)/libapoa.so $(DESTDIR)$(PREFIX)$(arch_LIB)
-	install -m 0644 $(SODIR)/libapoa.a $(DESTDIR)$(PREFIX)$(arch_LIB)
+	test -f $(SODIR)/libapoa.a && install -m 0644 $(SODIR)/libapoa.a $(DESTDIR)$(PREFIX)$(arch_LIB) || :
 	
 	mkdir -p $(DESTDIR)$(PREFIX)/include/libapoa
 	install -m 0644 $(INCDIR)/*.h* $(DESTDIR)$(PREFIX)/include/libapoa

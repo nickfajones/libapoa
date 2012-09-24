@@ -9,21 +9,22 @@
 ###############################################################################
  */
 
-#ifndef LIBAPOA_SIGNAL_HANDLER_HPP
-#define LIBAPOA_SIGNAL_HANDLER_HPP
+#ifndef LIBAPOA_THREAD_HANDLER_TYPES_HPP
+#define LIBAPOA_THREAD_HANDLER_TYPES_HPP
 
-#include <libapoa/basic_signal_handler.hpp>
-#include <libapoa/basic_signal_handler_service.hpp>
-#include <libapoa/signal_handler_impl.hpp>
+#include <boost/asio.hpp>
+#include <boost/function.hpp>
+#include <boost/system/error_code.hpp>
 
 
 namespace apoa
 {
 
 //#############################################################################
-typedef struct basic_siginfo siginfo;
-typedef basic_signal_handler<basic_signal_handler_service> signal_handler;
+typedef boost::function<
+  void (const boost::system::error_code&,
+  boost::asio::io_service&)> thread_callback;
 
 }; // namespace apoa
 
-#endif // LIBAPOA_SIGNAL_HANDLER_HPP
+#endif // LIBAPOA_THREAD_HANDLER_TYPES_HPP

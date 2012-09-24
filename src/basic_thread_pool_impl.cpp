@@ -1,8 +1,8 @@
 /*############################################################################
 #
-# Copyright (C) 2011 Network Box Corporation Limited
-#   nick.jones@network-box.com
-#   jeff.he@network-box.com
+# Copyright (C) 2012 Network Box Corporation Limited
+#   Nick Jones <nick.jones@network-box.com>
+#   Jeff He <jeff.he@network-box.com>
 #
 # Distributed under the Boost Software License, Version 1.0. (See accompanying
 # file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -18,45 +18,12 @@ namespace apoa
 {
 
 //#############################################################################
-thread_pool_ref::thread_pool_ref(boost::asio::io_service& io_service) :
-  m_io_service(io_service)
-  {
-  }
-
-//#############################################################################
-thread_pool_ref::~thread_pool_ref()
-  {
-  apoa::shutdown_thread();
-  }
-
-//#############################################################################
-void thread_pool_ref::on_thread_start(
-  const boost::system::error_code& ec,
-  boost::shared_ptr<basic_thread_pool_impl> impl)
-  {
-  if (ec)
-    {
-    BOOST_ASSERT(0 && ec.message().data());
-    }
-
-  impl->register_thread(shared_from_this());
-  }
-
-//#############################################################################
-boost::asio::io_service& thread_pool_ref::get_io_service()
-  {
-  return m_io_service;
-  }
-
-
-
-//#############################################################################
 basic_thread_pool_impl::basic_thread_pool_impl(
     boost::asio::io_service& io_service) :
   thread_handler_(io_service),
   pool_(),
-  pool_size_(0),
-  iter_(pool_.end())
+  iter_(pool_.end()),
+  pool_size_(0)
   {
   }
 
@@ -80,15 +47,36 @@ void basic_thread_pool_impl::create_pool(
     return;
     }
 
-  pool_size_ = size;
-
   for (uint32_t i = 0; i < size; i++)
     {
     thread_handler_.create_thread(
-      &thread_pool_ref::on_thread_start,
-      static_cast<thread_pool_ref*>(NULL),
-      shared_from_this());
+      boost::bind(
+        &basic_thread_pool_impl::on_thread_created, shared_from_this(),
+          boost::asio::placeholders::error, _2));
     }
+  }
+
+//#############################################################################
+void basic_thread_pool_impl::on_thread_created(
+    const boost::system::error_code& ec,
+    boost::asio::io_service& io_service)
+  {
+  if (ec)
+    {
+    BOOST_ASSERT(0 && ec.message().data());
+    return;
+    }
+
+  pool_size_++;
+
+  pid_t tid = apoa::get_tid();
+
+  boost::lock_guard<boost::mutex> pool_lock(pool_mutex_);
+
+  BOOST_ASSERT(pool_.find(tid) == pool_.end() &&
+    "basic_thread_pool_impl: create existing thread id");
+
+  pool_.insert(std::make_pair(tid, boost::ref(io_service)));
   }
 
 //#############################################################################
@@ -139,19 +127,6 @@ boost::asio::io_service& basic_thread_pool_impl::get_thread_service(
       }
     }
 
-  return iter_->second->get_io_service();
-  }
-
-//#############################################################################
-void basic_thread_pool_impl::register_thread(
-    boost::shared_ptr<thread_pool_ref> ref)
-  {
-  pid_t tid = apoa::get_tid();
-  boost::lock_guard<boost::mutex> pool_lock(pool_mutex_);
-
-  BOOST_ASSERT(pool_.find(tid) == pool_.end() &&
-    "basic_thread_pool_impl: create existing thread id");
-
-  pool_[tid] = ref;
+  return iter_->second;
   }
 }; // namespace apoa

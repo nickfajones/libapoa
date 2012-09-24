@@ -1,7 +1,7 @@
 /*#############################################################################
 #
-# Copyright (C) 2011 Network Box Corporation Limited
-#   nick.jones@network-box.com
+# Copyright (C) 2012 Network Box Corporation Limited
+#   Nick Jones <nick.jones@network-box.com>
 #
 # Distributed under the Boost Software License, Version 1.0. (See accompanying
 # file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -9,134 +9,72 @@
 ###############################################################################
  */
 
-#include <unistd.h>
-#include <sys/syscall.h>
-#include <sys/types.h>
-#include <sys/time.h>
-#include <time.h>
-#include <stdarg.h>
-#include <string.h>
-#include <stdio.h>
-#ifdef __APPLE__
-#include <mach/mach_init.h>
-#endif
-
-#include <libapoa/common.hpp>
-#include <libapoa/basic_thread_handler.hpp>
+#include "common.hpp"
+#include "thread_handler.hpp"
 
 
 namespace apoa
 {
 
+namespace priv
+{
+
 //#############################################################################
-int _log_level = 1000000;
+int32_t per_thread_registry::index_id_(0);
 
-#define _APOA_LOG_FMT_SIZE                               (25 + 256)
-#if defined __linux__
-__thread char _log_fmt[_APOA_LOG_FMT_SIZE + 1];
-#endif
+boost::mutex per_thread_registry::callback_mutex_;
 
-void set_log_level(log_level level)
-  {
-  _log_level = level;
-  }
+per_thread_registry::per_thread_index_callback_map
+  per_thread_registry::thread_start_callbacks_;
+per_thread_registry::per_thread_index_callback_map
+  per_thread_registry::thread_finish_callbacks_;
 
-void log(log_level level, const char* fmt, ...)
-  {
-  va_list ap;
-  
-  if ((_log_level == 0) || (level > _log_level))
-    {
-    return;
-    }
-  
-  struct timeval tv;
-  gettimeofday(&tv, NULL);
-  
-  char tm_buf[10];
-  if (strftime(tm_buf, 9, "%T", localtime(&tv.tv_sec)) == 0) \
-    {
-    printf("[%05d] unable to generate apoa::log timestamp\n", get_tid());
-    fflush(stdout);
-    
-    return;
-    }
-  
-  if (strlen(fmt) >= _APOA_LOG_FMT_SIZE)
-    {
-    printf("[%05d] %s:%06ld apoa::log format string too long\n",
-      get_tid(), tm_buf, tv.tv_usec);
-    fflush(stdout);
-    
-    return;
-    }
-  
-#if defined __APPLE__
-  char _log_fmt[_APOA_LOG_FMT_SIZE];
-#endif
-  sprintf(_log_fmt, "[%05d] %s:%06ld %s\n",
-    get_tid(), tm_buf, tv.tv_usec, fmt);
-  
-  va_start(ap, fmt);
-  vprintf(_log_fmt, ap);
-  va_end(ap);
-  fflush(stdout);
-  }
+std::set<tenum_t> per_thread_registry::thread_set_;
 
-#undef _APOA_LOG_FMT_SIZE
+};
+
 
 
 //#############################################################################
-#if defined __linux__
-__thread pid_t _apoa_linux_tid = 0;
-#endif
-#if defined __APPLE__
-pid_t _apoa_apple_pid = pthread_mach_thread_np(pthread_self());
-#endif
+per_thread_index<thread_handler::thread_registration>
+  thread_handler::thread_registry_(-1);
 
-pid_t get_pid()
+boost::mutex thread_handler::tid_tenum_map_mutex_;
+std::map<pid_t, tenum_t> thread_handler::tid_tenum_map_;
+
+
+
+//#############################################################################
+boost::asio::io_service& get_process_io_service()
   {
-#if defined __linux__
-  return getpid();
-#elif defined __APPLE__
-  return _apoa_apple_pid;
-#else
-#error get_pid: unsupported platform
-#endif
+  return thread_handler::get_io_service(0);
   }
 
-pid_t get_tid()
+void shutdown_process(int retval)
   {
-#if defined __linux__
-  if (_apoa_linux_tid == 0)
-    {
-    _apoa_linux_tid = (pid_t)syscall(__NR_gettid);
-    }
-  return _apoa_linux_tid;
-#elif defined __APPLE__
-  return pthread_mach_thread_np(pthread_self());
-#else
-#error "get_tid: unsupported platform"
-#endif
+  thread_handler::shutdown_thread(0, retval);
   }
 
-bool is_process_thread()
+//#############################################################################
+boost::asio::io_service& get_io_service(apoa::tenum_t tenum)
   {
-  return (get_tid() == get_pid());
+  return thread_handler::get_io_service(tenum);
   }
 
-
+void shutdown_thread(apoa::tenum_t tenum, int retval)
+  {
+  thread_handler::shutdown_thread(tenum, retval);
+  }
 
 //#############################################################################
 boost::asio::io_service& get_io_service(pid_t tid)
   {
-  return basic_thread_handler(get_process_io_service()).get_io_service(tid);
+  return thread_handler::get_io_service_tid(tid);
   }
 
-//#############################################################################
 void shutdown_thread(pid_t tid, int retval)
   {
-  basic_thread_handler(get_process_io_service()).shutdown_thread(tid, retval);
+  thread_handler::shutdown_thread_tid(tid, retval);
   }
 
 }; // namespace apoa
