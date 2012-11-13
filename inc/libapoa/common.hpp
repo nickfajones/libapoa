@@ -62,49 +62,13 @@ class tenum_t
     int tenum_;
   };
 
-namespace priv
-{
-//#############################################################################
-static __thread pid_t tid =                               -1;
-static __thread int tenum =                               -1;
-
-static int global_tenum =                                 -1;
-  // force tenum of main thread to zero
-};
-
 
 
 //#############################################################################
-inline pid_t get_pid()
-  {
-  return ::getpid();
-  }
-
-inline pid_t get_tid()
-  {
-  if (priv::tid == -1)
-    {
-    priv::tid = (pid_t)syscall(__NR_gettid);
-    }
-
-  return priv::tid;
-  }
-
-inline tenum_t get_tenum()
-  {
-  if (priv::tenum == -1)
-    {
-    priv::tenum = __sync_add_and_fetch(&priv::global_tenum, 1);
-    }
-
-  return tenum_t(priv::tenum);
-  }
-
-//#############################################################################
-inline bool is_process_thread()
-  {
-  return (get_tid() == get_pid());
-  }
+pid_t get_pid();
+pid_t get_tid();
+tenum_t get_tenum();
+bool is_process_thread();
 
 
 
@@ -122,21 +86,8 @@ enum log_level
 
 
 //#############################################################################
-namespace priv
-{
-static int log_level =                                    1000000;
-};
-
-//#############################################################################
-inline int get_log_level()
-  {
-  return priv::log_level;
-  }
-
-inline void set_log_level(int level)
-  {
-  priv::log_level = level;
-  }
+int get_log_level();
+void set_log_level(int level);
 
 
 
@@ -188,7 +139,7 @@ inline void apoavsprintf(
 //#############################################################################
 inline void apoalogstdout(int level, const std::string& message)
   {
-  if ((priv::log_level == 0) || (priv::log_level <= level))
+  if ((apoa::get_log_level() == 0) || (apoa::get_log_level() <= level))
     {
     return;
     }
@@ -222,7 +173,7 @@ inline void apoalogstdout(int level, const std::string& message)
 inline void apoalogstdout(
     int level, const std::string& fmt, va_list& args)
   {
-  if ((priv::log_level == 0) || (priv::log_level <= level))
+  if ((apoa::get_log_level() == 0) || (apoa::get_log_level() <= level))
     {
     return;
     }
@@ -237,7 +188,7 @@ template <typename... ARGS>
 void apoalogstdout(
     int level, const std::string& fmt, const ARGS&... args)
   {
-  if ((priv::log_level == 0) || (priv::log_level <= level))
+  if ((apoa::get_log_level() == 0) || (apoa::get_log_level() <= level))
     {
     return;
     }
@@ -263,6 +214,8 @@ void shutdown_thread(apoa::tenum_t tenum = apoa::get_tenum(), int retval = 0);
 
 boost::asio::io_service& get_io_service(pid_t tid);
 void shutdown_thread(pid_t tid, int retval);
+
+boost::asio::io_service& get_thread_io_service();
 
 
 

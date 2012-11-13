@@ -16,6 +16,15 @@ namespace apoa
 {
 
 //#############################################################################
+per_thread_index<thread_handler::thread_registration>
+  thread_handler::thread_registry_(-1);
+
+boost::mutex thread_handler::tid_tenum_map_mutex_;
+std::map<pid_t, tenum_t> thread_handler::tid_tenum_map_;
+
+
+
+//#############################################################################
 thread_handler::thread_registration::thread_registration() :
   tid_(0),
   shutdown_countdown_(0),
@@ -187,6 +196,14 @@ void thread_handler::shutdown_thread(tenum_t tenum, int retval)
   thread_registration& registration =
     thread_registry_.get(tenum);
 
+  if (tenum != get_tenum())
+    {
+    registration.thread_io_service_->post(
+      boost::bind(&shutdown_thread, tenum, retval));
+
+    return;
+    }
+
   if (registration.is_shutdown_started_)
     {
     return;
@@ -232,7 +249,8 @@ void thread_handler::shutdown_thread(tenum_t tenum, int retval)
     child_registration.retval_ = retval;
     child_registration.is_shutdown_started_ = true;
 
-    shutdown_thread_initial(*itr);
+    child_registration.thread_io_service_->post(
+      boost::bind(&shutdown_thread_initial, *itr));
     }
   }
 
@@ -269,9 +287,9 @@ void thread_handler::join_thread(apoa::tenum_t tenum)
   boost::lock_guard<boost::mutex> pool_lock(tid_tenum_map_mutex_);
   tid_tenum_map_.erase(registration.tid_);
   }
+  }
 
   thread_registry_.do_on_thread_finish(tenum);
-  }
 
   thread_registration& process_registration =
     thread_registry_.get(0);
