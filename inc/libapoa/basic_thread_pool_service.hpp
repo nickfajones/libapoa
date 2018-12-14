@@ -26,8 +26,7 @@ class basic_thread_pool_service :
     public boost::asio::detail::service_base<basic_thread_pool_service>
   {
   public:
-    typedef boost::shared_ptr<apoa::basic_thread_pool_impl>
-      implementation_type;
+    typedef boost::shared_ptr<basic_thread_pool_impl> implementation_type;
     
   public:
     explicit basic_thread_pool_service(boost::asio::io_service& io_service);

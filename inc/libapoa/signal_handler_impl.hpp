@@ -45,7 +45,7 @@ class signal_handler_base_impl :
       void (const boost::system::error_code&, struct basic_siginfo)>
         basic_signal_callback;
     
-    typedef boost::asio::posix::stream_descriptor_service::native_type
+    typedef boost::asio::posix::stream_descriptor_service::native_handle_type
       basic_signal_descriptor;
     
   public:

@@ -29,7 +29,7 @@ class basic_thread_pool_impl :
     typedef std::map<pid_t, boost::asio::io_service&> threads_map;
 
   public:
-    basic_thread_pool_impl(boost::asio::io_service& io_service);
+    explicit basic_thread_pool_impl(boost::asio::io_service& io_service);
     ~basic_thread_pool_impl();
 
   public:

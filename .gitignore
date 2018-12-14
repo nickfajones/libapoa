@@ -1,4 +1,4 @@
-/.svn
-/inc/.svn
-/inc/libapoa/.svn
-/src/.svn
+dev.mk
+.obj/
+.obj_bin/
+.obj_so/

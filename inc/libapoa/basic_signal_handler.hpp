@@ -48,7 +48,7 @@ class basic_signal_handler :
     
     std::size_t cancel(boost::system::error_code& ec)
       {
-      return this->service.cancel(this->implementation, ec);
+      return this->get_service().cancel(this->get_implementation(), ec);
       }
     
   public:
@@ -61,14 +61,14 @@ class basic_signal_handler :
     
     void handle(int signum, boost::system::error_code& ec)
       {
-      this->service.handle(this->implementation, signum, ec);
+      this->get_service().handle(this->get_implementation(), signum, ec);
       }
     
   public:
     template <typename NotificationHandler>
     void async_wait(NotificationHandler handler)
       {
-      this->service.async_wait(this->implementation, handler);
+      this->get_service().async_wait(this->get_implementation(), handler);
       }
   };
 

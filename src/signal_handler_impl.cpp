@@ -469,7 +469,7 @@ void posix_signal_handler_impl::add_sigaction(
   
   if (sigaction(key.signum_, &sa, &key.old_sa_))
     {
-    ec.assign(errno, boost::system::get_system_category());
+    ec.assign(errno, boost::system::system_category());
     }
   }
 
@@ -603,14 +603,14 @@ void signalfd_signal_handler_impl::add_sigaction(
   
   if (pthread_sigmask(SIG_SETMASK, &_signalfd_process_sigset, NULL))
     {
-    ec.assign(errno, boost::system::get_system_category());
+    ec.assign(errno, boost::system::system_category());
     
     return;
     }
   
   if (signalfd(_signalfd_fd, &_signalfd_process_sigset, 0) == -1)
     {
-    ec.assign(errno, boost::system::get_system_category());
+    ec.assign(errno, boost::system::system_category());
     }
   }
 

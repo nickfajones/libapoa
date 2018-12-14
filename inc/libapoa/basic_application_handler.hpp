@@ -43,28 +43,28 @@ class basic_application_handler :
         boost::program_options::options_description& options_desc,
         int argc, char** argv)
       {
-      this->service.process_init(this->implementation, options_desc, argc, argv);
+      this->get_service().process_init(this->get_implementation(), options_desc, argc, argv);
       }
 
     bool process_has_option(const std::string& option_name)
       {
-      return this->service.process_has_option(this->implementation, option_name);
+      return this->get_service().process_has_option(this->get_implementation(), option_name);
       }
 
     boost::program_options::variable_value get_process_option(
         const std::string& option_name)
       {
-      return this->service.get_process_option(this->implementation, option_name);
+      return this->get_service().get_process_option(this->get_implementation(), option_name);
       }
 
     int process_start(thread_callback handler)
       {
-      return this->service.process_start(this->implementation, handler);
+      return this->get_service().process_start(this->get_implementation(), handler);
       }
 
     void set_watchdog(uint32_t seconds)
       {
-      return this->service.set_watchdog(this->implementation, seconds);
+      return this->get_service().set_watchdog(this->get_implementation(), seconds);
       }
   };
 

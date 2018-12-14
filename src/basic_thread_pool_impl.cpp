@@ -43,7 +43,7 @@ void basic_thread_pool_impl::create_pool(
   boost::lock_guard<boost::mutex> pool_lock(pool_mutex_);
   if (pool_.size() > 0 || pool_size_ != 0)
     {
-    ec.assign(EALREADY, boost::system::get_system_category());
+    ec.assign(EALREADY, boost::system::system_category());
     return;
     }
 
@@ -103,11 +103,11 @@ boost::asio::io_service& basic_thread_pool_impl::get_thread_service(
     {
     if (pool_size_ != 0)
       {
-      ec.assign(EAGAIN, boost::system::get_system_category());
+      ec.assign(EAGAIN, boost::system::system_category());
       }
     else
       {
-      ec.assign(ENODATA, boost::system::get_system_category());
+      ec.assign(ENODATA, boost::system::system_category());
       }
 
     return thread_handler_.get_io_service();

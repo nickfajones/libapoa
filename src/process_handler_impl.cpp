@@ -14,7 +14,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-#include <boost/filesystem/v3/operations.hpp>
+#include <boost/filesystem.hpp>
 
 #include "basic_process_context.hpp"
 #include "process_handler_impl.hpp"
@@ -65,7 +65,7 @@ void process_handler_impl::launch(
       {
       if (!ec)
         {
-        ec.assign(ENOTSUP, boost::system::get_system_category());
+        ec.assign(ENOTSUP, boost::system::system_category());
         }
       
       break;
@@ -98,7 +98,7 @@ void process_handler_impl::launch(
     // fork fails
     if (child_pid == -1)
       {
-      ec.assign(errno, boost::system::get_system_category());
+      ec.assign(errno, boost::system::system_category());
       break;
       }
     
@@ -132,13 +132,13 @@ void process_handler_impl::launch(
     // Close child fds
     if (close(child_read_fd) != 0)
       {
-      ec.assign(errno, boost::system::get_system_category());
+      ec.assign(errno, boost::system::system_category());
       break;
       }
 
     if (close(child_write_fd) != 0)
       {
-      ec.assign(errno, boost::system::get_system_category());
+      ec.assign(errno, boost::system::system_category());
       break;
       }
 
@@ -156,7 +156,7 @@ void process_handler_impl::exec(
     {
     if (!ec)
       {
-      ec.assign(ENOTSUP, boost::system::get_system_category());
+      ec.assign(ENOTSUP, boost::system::system_category());
       }
 
     return;
@@ -168,7 +168,7 @@ void process_handler_impl::exec(
     if (execv(context_.executable_file_path().c_str(),
           context_.get_args().get()) == -1)
       {
-      ec.assign(errno, boost::system::get_system_category());
+      ec.assign(errno, boost::system::system_category());
       }
     
     return;
@@ -178,7 +178,7 @@ void process_handler_impl::exec(
   if (execve(context_.executable_file_path().c_str(),
         context_.get_args().get(), context_.get_envp().get()) == -1)
     {
-    ec.assign(errno, boost::system::get_system_category());
+    ec.assign(errno, boost::system::system_category());
     }
   }
 
@@ -218,7 +218,7 @@ void process_handler_impl::signal(
   // Send signal to child process
   if (kill(context_.handle(), signal_code) != 0)
     {
-    ec.assign(errno, boost::system::get_system_category());
+    ec.assign(errno, boost::system::system_category());
     }
   }
 
@@ -240,14 +240,14 @@ void process_handler_impl::create_pipe(
     // Create pipe1
     if (pipe(pipe_one) != 0)
       {
-      ec.assign(errno, boost::system::get_system_category());
+      ec.assign(errno, boost::system::system_category());
       break;
       }
     
     // Create pipe2
     if (pipe(pipe_two) != 0)
       {
-      ec.assign(errno, boost::system::get_system_category());
+      ec.assign(errno, boost::system::system_category());
       break;
       }
     
@@ -378,7 +378,7 @@ void process_handler_impl::sigchld_handle(
   // waitpid has error
   if (who_died == -1)
     {
-    new_ec.assign(errno, boost::system::get_system_category());
+    new_ec.assign(errno, boost::system::system_category());
     }
 
   // Dead child process does not belong to current thread
@@ -467,7 +467,7 @@ bool process_handler_impl::is_file_executable(const std::string& file,
       {
       if (!ec)
         {
-        ec.assign(ENOENT, boost::system::get_system_category());
+        ec.assign(ENOENT, boost::system::system_category());
         }
 
       break;
@@ -479,7 +479,7 @@ bool process_handler_impl::is_file_executable(const std::string& file,
       {
       if (!ec)
         {
-        ec.assign(EISDIR, boost::system::get_system_category());
+        ec.assign(EISDIR, boost::system::system_category());
         }
 
       break;
@@ -491,7 +491,7 @@ bool process_handler_impl::is_file_executable(const std::string& file,
       {
       if (!ec)
         {
-        ec.assign(ENOTSUP, boost::system::get_system_category());
+        ec.assign(ENOTSUP, boost::system::system_category());
         }
 
       break;
@@ -500,7 +500,7 @@ bool process_handler_impl::is_file_executable(const std::string& file,
     // Check if executable
     if (access(file.data(), F_OK | X_OK) != 0)
       {
-      ec.assign(errno, boost::system::get_system_category());
+      ec.assign(errno, boost::system::system_category());
       break;
       }
 

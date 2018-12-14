@@ -34,11 +34,11 @@ class basic_process_handler :
       boost::asio::basic_io_object<ProcessService>(io_service)
       {
       }
-    
+
     ~basic_process_handler()
       {
       }
-    
+
   public:
     void cancel()
       {
@@ -46,12 +46,12 @@ class basic_process_handler :
       cancel(ec);
       boost::asio::detail::throw_error(ec);
       }
-    
+
     void cancel(boost::system::error_code& ec)
       {
-      this->service.cancel(this->implementation, ec);
+      this->get_service().cancel(this->get_implementation(), ec);
       }
-    
+
   public:
     void launch(basic_process_context& context)
       {
@@ -62,66 +62,68 @@ class basic_process_handler :
 
     void launch(basic_process_context& context, boost::system::error_code& ec)
       {
-      this->service.launch(this->implementation, context, ec);
+      this->get_service().launch(this->get_implementation(), context, ec);
       }
 
     void exec(basic_process_context& context, boost::system::error_code& ec)
       {
-      this->service.exec(this->implementation, context, ec);
+      this->get_service().exec(this->get_implementation(), context, ec);
       }
-    
+
     void signal(basic_process_context::signal_type signal_code)
       {
       boost::system::error_code ec;
       this->signal(signal_code, ec);
       boost::asio::detail::throw_error(ec);
       }
-    
+
     void signal(
         basic_process_context::signal_type signal_code,
         boost::system::error_code& ec)
       {
-      this->service.signal(this->implementation, signal_code, ec);
+      this->get_service().signal(this->get_implementation(), signal_code, ec);
       }
-    
+
     template <typename Handler>
     void async_wait_exit(Handler handler)
       {
-      this->service.async_wait_exit(this->implementation, handler);
+      this->get_service().async_wait_exit(this->get_implementation(), handler);
       }
-    
+
   public:
     template <typename MutableBuffer, typename Handler>
     void async_pipe_read(MutableBuffer buffer, Handler handler)
       {
-      this->service.async_pipe_read(this->implementation, buffer, handler);
+      this->get_service().async_pipe_read(
+        this->get_implementation(), buffer, handler);
       }
-    
+
     template <typename ConstBuffer, typename Handler>
     void async_pipe_write(ConstBuffer buffer, Handler handler)
       {
-      this->service.async_pipe_write(this->implementation, buffer, handler);
+      this->get_service().async_pipe_write(
+        this->get_implementation(), buffer, handler);
       }
 
   public:
     void cancel_pipe_read()
       {
-      this->service.cancel_pipe_read(this->implementation);
+      this->get_service().cancel_pipe_read(this->get_implementation());
       }
 
     void cancel_pipe_write()
       {
-      this->service.cancel_pipe_write(this->implementation);
+      this->get_service().cancel_pipe_write(this->get_implementation());
       }
 
     void close_pipe_read()
       {
-      this->service.close_pipe_read(this->implementation);
+      this->get_service().close_pipe_read(this->get_implementation());
       }
 
     void close_pipe_write()
       {
-      this->service.close_pipe_write(this->implementation);
+      this->get_service().close_pipe_write(this->get_implementation());
       }
 
   };

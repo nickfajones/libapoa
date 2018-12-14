@@ -70,12 +70,12 @@ static int log_level =                                    1000000;
 
 
 //#############################################################################
-inline int get_log_level()
+int get_log_level()
   {
   return priv::log_level;
   }
 
-inline void set_log_level(int level)
+void set_log_level(int level)
   {
   priv::log_level = level;
   }

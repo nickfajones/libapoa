@@ -107,7 +107,7 @@ void thread_handler::create_thread(thread_callback handler)
     }
   catch (boost::thread_resource_error& err)
     {
-    boost::system::error_code ec(errno, boost::system::get_system_category());
+    boost::system::error_code ec(errno, boost::system::system_category());
 
     io_service_.post(
       boost::bind(handler, ec, boost::ref(io_service_)));

@@ -11,10 +11,17 @@ default: dev
 
 
 ###############################################################################
+ifneq (,$(shell [ -f dev.mk ] && echo 1))
+include dev.mk
+endif
+
+
+###############################################################################
 PROJECT         = libapoa
 
 ARCH            = $(shell uname -m)
 
+ifeq ($(arch_LIB),)
 ifeq ($(ARCH),x86_64)
 arch_LIB        = /lib64
 else ifeq ($(ARCH),i386)
@@ -23,6 +30,7 @@ else ifeq ($(ARCH),i686)
 arch_LIB        = /lib
 else
 $(error target ${ARCH} not supported)
+endif
 endif
 
 
@@ -83,11 +91,6 @@ build_LIBS      = $(base_LIBS)
 
 
 ###############################################################################
-ifneq (,$(shell [ -f dev.mk ] && echo 1))
-include dev.mk
-endif
-
-
 ifeq ($(ASIODIR),)
 ASIODIR         = /usr
 endif
@@ -102,14 +105,20 @@ ifeq ($(BOOSTDIR),)
 BOOSTDIR        = /usr
 endif
 
+ifeq ($(BOOSTLIB),)
+BOOSTLIB        = $(BOOSTDIR)$(arch_LIB)
+endif
+
 ifneq ($(BOOSTDIR),/usr)
 dev_CPPFLAGS    += -isystem $(BOOSTDIR)/include
 build_CPPFLAGS  += -isystem $(BOOSTDIR)/include
-dev_LDFLAGS     += -L$(BOOSTDIR)$(arch_LIB) -Wl,-rpath=$(BOOSTDIR)$(arch_LIB)
-build_LDFLAGS   += -L$(BOOSTDIR)$(arch_LIB) -Wl,-rpath=$(BOOSTDIR)$(arch_LIB)
+dev_LDFLAGS     += -L$(BOOSTLIB)$(arch_LIB) -Wl,-rpath=$(BOOSTLIB)$(arch_LIB)
+build_LDFLAGS   += -L$(BOOSTLIB)$(arch_LIB) -Wl,-rpath=$(BOOSTLIB)$(arch_LIB)
 endif
-dev_LIBS        += -lboost_system-mt -lboost_filesystem-mt -lboost_thread-mt -lboost_program_options-mt
-build_LIBS      += -lboost_system-mt -lboost_filesystem-mt -lboost_thread-mt -lboost_program_options-mt
+dev_CPPFLAGS    += -DBOOST_ASIO_ENABLE_OLD_SERVICES
+build_CPPFLAGS  += -DBOOST_ASIO_ENABLE_OLD_SERVICES
+dev_LIBS        += -lboost_system -lboost_filesystem -lboost_thread -lboost_program_options
+build_LIBS      += -lboost_system -lboost_filesystem -lboost_thread -lboost_program_options
 
 
 ##########################################################################

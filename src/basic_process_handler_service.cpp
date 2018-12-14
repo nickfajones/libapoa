@@ -40,7 +40,7 @@ void basic_process_handler_service::shutdown_service()
 
 void basic_process_handler_service::construct(implementation_type& impl)
   {
-  impl.reset(new implementation_type::value_type(get_io_service()));
+  impl.reset(new implementation_type::element_type(get_io_service()));
   }
 
 void basic_process_handler_service::destroy(implementation_type& impl)
