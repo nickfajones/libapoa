@@ -65,7 +65,7 @@ basic_process_context::~basic_process_context()
   }
 
 //#############################################################################
-std::string& basic_process_context::working_directory()
+const std::string& basic_process_context::working_directory()
   {
   return details_->working_directory;
   }
@@ -76,112 +76,86 @@ void basic_process_context::working_directory(const std::string& path)
   }
 
 //#############################################################################
-std::string& basic_process_context::executable_file_path()
+const std::string& basic_process_context::executable_file_path()
   {
   return details_->executable_file_path;
   }
 
 void basic_process_context::exectuable_file_path(const std::string& file_path)
   {
-  if (details_->args.size() > 0)
-    {
-    details_->args.pop_front();
-    }
-  
   details_->executable_file_path = file_path;
-  details_->args.push_front(file_path);
   }
+
+namespace
+{
+static const char *_n = 0;
+}
 
 //#############################################################################
-basic_process_context::environment_type& basic_process_context::environment()
+const basic_process_context::env_type& basic_process_context::env()
   {
-  return details_->environment;
+  return details_->env;
   }
 
-boost::shared_array<char*> basic_process_context::get_envp()
+char* const* basic_process_context::get_env_array()
   {
-  boost::shared_array<char*> envp(new char*[details_->environment.size()+1]);
-  size_t counter = 0;
+  details_->env_array.clear();
+  details_->env_array.reserve(details_->env.size() + 1);
 
-  details_->env_name_value.reset(
-    new std::string[details_->environment.size()]);
-
-  for (environment_iterator_type iter = details_->environment.begin();
-    iter != details_->environment.end(); iter++, counter++)
+  for (env_iterator env_iter = details_->env.begin();
+       env_iter != details_->env.end();
+       env_iter++)
     {
-    details_->env_name_value[counter] = iter->first + "=" + iter->second;
-    envp[counter] =
-      const_cast<char*>(details_->env_name_value[counter].data());
-    }
-  if (counter ==  details_->environment.size())
-    {
-    envp[counter] = NULL;
+    details_->env_array.push_back(env_iter->second.c_str());
     }
 
-  return envp;
+
+  details_->env_array.push_back(_n);
+
+  details_->env_array.shrink_to_fit();
+
+  return
+    static_cast<char* const*>(const_cast<char**>(details_->env_array.data()));
   }
 
-void basic_process_context::environment_set(
+void basic_process_context::env_set(
   const std::string& name, const std::string& value)
   {
-  details_->environment.insert(std::pair<std::string, std::string>(
-    name, value));
-  }
-
-void basic_process_context::environment_unset(const std::string& name)
-  {
-  details_->environment.erase(name);
-  }
-
-basic_process_context::environment_iterator_type
-  basic_process_context::environment_begin()
-  {
-  return details_->environment.begin();
-  }
-
-basic_process_context::environment_iterator_type
-  basic_process_context::environment_end()
-  {
-  return details_->environment.end();
+  details_->env.insert(std::make_pair(name, name + "=" + value));
   }
 
 //#############################################################################
-basic_process_context::args_type& basic_process_context::args()
+const basic_process_context::args_type& basic_process_context::args()
   {
   return details_->args;
   }
 
-boost::shared_array<char*> basic_process_context::get_args()
+char* const* basic_process_context::get_args_array()
   {
-  boost::shared_array<char*> argv(new char*[details_->args.size()+1]);
-  size_t counter = 0;
+  details_->args_array.clear();
+  details_->args_array.reserve(details_->args.size() + 2);
 
-  for (args_iterator_type iter = details_->args.begin();
-    iter != details_->args.end(); iter++, counter++)
+  details_->args_array.push_back(details_->executable_file_path.c_str());
+
+  for (args_iterator args_iter = details_->args.begin();
+       args_iter != details_->args.end();
+       args_iter++)
     {
-    argv[counter] = const_cast<char*>(iter->data());
-    }
-  if (counter == details_->args.size())
-    {
-    argv[counter] = NULL;
+    details_->args_array.push_back(args_iter->c_str());
     }
 
-  return argv;
+  details_->args_array.push_back(_n);
+
+  details_->args_array.shrink_to_fit();
+
+  return
+    static_cast<char* const*>(const_cast<char**>(
+      details_->args_array.data()));
   }
 
 void basic_process_context::args_add(const std::string& arg)
   {
   details_->args.push_back(arg);
-  }
-
-basic_process_context::args_iterator_type basic_process_context::args_begin()
-  {
-  return details_->args.begin();
-  }
-
-basic_process_context::args_iterator_type basic_process_context::args_end()
-  {
-  return details_->args.end();
   }
 
 //#############################################################################

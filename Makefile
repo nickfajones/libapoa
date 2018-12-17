@@ -147,8 +147,13 @@ build: dirs
 	$(MAKE) $(SODIR)/libapoa.so OBJS="$(build_OBJS)" \
 	  LDOBJS="$(build_LDOBJS)" LDFLAGS="$(build_LDFLAGS)" LIBS="$(build_LIBS)"
 
-apoaapp: dev
-	$(MAKE) $(EXEDIR)/apoaapp \
+apoaapp_thread: dev
+	$(MAKE) $(EXEDIR)/apoaapp_thread \
+	  CFLAGS="$(dev_CFLAGS)" OPT="$(dev_OPT)" CPPFLAGS="$(dev_CPPFLAGS)" \
+	  LDFLAGS="$(dev_LDFLAGS) $(test_LDFLAGS)" LIBS="$(dev_LIBS)"
+
+apoaapp_child: dev
+	$(MAKE) $(EXEDIR)/apoaapp_child \
 	  CFLAGS="$(dev_CFLAGS)" OPT="$(dev_OPT)" CPPFLAGS="$(dev_CPPFLAGS)" \
 	  LDFLAGS="$(dev_LDFLAGS) $(test_LDFLAGS)" LIBS="$(dev_LIBS)"
 

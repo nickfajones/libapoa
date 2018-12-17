@@ -30,14 +30,15 @@ namespace apoa
 class basic_process_context
   {
   public:
-    typedef std::map<std::string, std::string> environment_type;
-    typedef std::map<std::string, std::string>::iterator environment_iterator_type;
+    typedef std::map<std::string, std::string> env_type;
+    typedef env_type::const_iterator env_iterator;
     typedef std::list<std::string> args_type;
-    typedef std::list<std::string>::iterator args_iterator_type;
+    typedef args_type::const_iterator args_iterator;
+
     typedef pid_t handle_type;
     typedef int signal_type;
     typedef int status_type;
-    
+
   public:
     static const signal_type signal_interrupt;
     static const signal_type signal_terminate;
@@ -48,32 +49,33 @@ class basic_process_context
     static const signal_type signal_hangup;
     static const signal_type signal_userdefined1;
     static const signal_type signal_userdefined2;
-    
+
   public:
     basic_process_context();
     basic_process_context(const basic_process_context& rvalue);
     ~basic_process_context();
-    
+
   public:
-    std::string& working_directory();
+    const std::string& working_directory();
     void working_directory(const std::string& path);
-    
-    std::string& executable_file_path();
+
+    const std::string& executable_file_path();
     void exectuable_file_path(const std::string& file_path);
-    
-    environment_type& environment();
-    boost::shared_array<char*> get_envp();
-    void environment_set(const std::string& name, const std::string& value);
-    void environment_unset(const std::string& name);
-    environment_iterator_type environment_begin();
-    environment_iterator_type environment_end();
-    
-    args_type& args();
-    boost::shared_array<char*> get_args();
+
+  public:
+    void env_set(const std::string& name, const std::string& value);
+
+
+    const env_type& env();
+    char* const* get_env_array();
+
+  public:
     void args_add(const std::string& arg);
-    args_iterator_type args_begin();
-    args_iterator_type args_end();
-    
+
+    const args_type& args();
+    char* const* get_args_array();
+
+  public:
     handle_type handle();
     void handle(handle_type child_handle);
 
@@ -82,15 +84,17 @@ class basic_process_context
       {
       std::string working_directory;
       std::string executable_file_path;
-      
-      environment_type environment;
-      boost::shared_array<std::string> env_name_value;
+
+      env_type env;
+      std::vector<const char*> env_array;
+
       args_type args;
-      
+      std::vector<const char*> args_array;
+
       handle_type handle;
       status_type status;
       };
-    
+
     boost::shared_ptr<details> details_;
   };
 

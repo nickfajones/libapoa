@@ -67,7 +67,7 @@ $(OBJDIR)/basic_process_handler_service.o: $(SRCDIR)/basic_process_handler_servi
 	$(CC) $(CFLAGS) $(CPPFLAGS) $(OPT) $< -c -o $@
 
 $(OBJDIR)/process_handler_impl.o: $(SRCDIR)/process_handler_impl.cpp \
-  $(INCDIR)/process_handler_impl.hpp
+  $(INCDIR)/process_handler_impl.hpp $(INCDIR)/basic_process_context.hpp
 	$(CC) $(CFLAGS) $(CPPFLAGS) $(OPT) $< -c -o $@
 
 
@@ -80,5 +80,8 @@ $(SODIR)/libapoa.so: $(OBJS)
 
 
 ###############################################################################
-$(EXEDIR)/apoaapp: apoaapp.cpp
+$(EXEDIR)/apoaapp_thread: apoaapp_thread.cpp
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(OPT) $< -o $@ $(LDOBJS) $(LDFLAGS) $(LIBS)
+
+$(EXEDIR)/apoaapp_child: apoaapp_child.cpp
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(OPT) $< -o $@ $(LDOBJS) $(LDFLAGS) $(LIBS)
