@@ -15,9 +15,9 @@
 
 #include <signal.h>
 
+#include <memory>
+
 #include <boost/noncopyable.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/enable_shared_from_this.hpp>
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
 #include <boost/system/error_code.hpp>
@@ -32,7 +32,7 @@ namespace apoa
 
 //#############################################################################
 class signal_handler_base_impl :
-    public boost::enable_shared_from_this<signal_handler_base_impl>
+    public std::enable_shared_from_this<signal_handler_base_impl>
   {
   public:
     class sigaction_handler;
@@ -87,7 +87,7 @@ class signal_handler_base_impl :
   public:
     class sigaction_handler :
         public boost::noncopyable,
-        public boost::enable_shared_from_this<sigaction_handler>
+        public std::enable_shared_from_this<sigaction_handler>
       {
       protected:
         sigaction_handler(boost::asio::io_service& io_service);
@@ -121,7 +121,7 @@ class signal_handler_base_impl :
   protected:
     virtual void create_sigaction_handler(
       boost::asio::io_service& io_service,
-      boost::shared_ptr<sigaction_handler>& handler) = 0;
+      std::shared_ptr<sigaction_handler>& handler) = 0;
       
   protected:
     virtual void add_sigaction(
@@ -169,7 +169,7 @@ class posix_signal_handler_impl : public signal_handler_base_impl
   protected:
     virtual void create_sigaction_handler(
       boost::asio::io_service& io_service,
-      boost::shared_ptr<sigaction_handler>& handler);
+      std::shared_ptr<sigaction_handler>& handler);
     
   protected:
     virtual void add_sigaction(
@@ -211,7 +211,7 @@ class signalfd_signal_handler_impl : public signal_handler_base_impl
   protected:
     virtual void create_sigaction_handler(
       boost::asio::io_service& io_service,
-      boost::shared_ptr<sigaction_handler>& handler);
+      std::shared_ptr<sigaction_handler>& handler);
     
   protected:
     virtual void add_sigaction(

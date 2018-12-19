@@ -16,9 +16,9 @@
 #include <sys/types.h>
 
 #include <map>
+#include <memory>
 
 #include <boost/asio.hpp>
-#include <boost/enable_shared_from_this.hpp>
 #include <boost/function.hpp>
 #include <boost/program_options.hpp>
 #include <boost/system/error_code.hpp>
@@ -32,7 +32,7 @@ namespace apoa
 
 //#############################################################################
 class application_handler_impl :
-    public boost::enable_shared_from_this<application_handler_impl>
+    public std::enable_shared_from_this<application_handler_impl>
   {
   public:
     explicit application_handler_impl(boost::asio::io_service& io_service) :

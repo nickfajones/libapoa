@@ -12,7 +12,8 @@
 #ifndef LIBAPOA_BASIC_THREAD_POOL_SERVICE_HPP
 #define LIBAPOA_BASIC_THREAD_POOL_SERVICE_HPP
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
+
 #include <boost/asio.hpp>
 
 #include <libapoa/basic_thread_pool_impl.hpp>
@@ -26,7 +27,7 @@ class basic_thread_pool_service :
     public boost::asio::detail::service_base<basic_thread_pool_service>
   {
   public:
-    typedef boost::shared_ptr<basic_thread_pool_impl> implementation_type;
+    typedef std::shared_ptr<basic_thread_pool_impl> implementation_type;
     
   public:
     explicit basic_thread_pool_service(boost::asio::io_service& io_service);

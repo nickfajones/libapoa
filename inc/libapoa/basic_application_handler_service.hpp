@@ -23,7 +23,7 @@ class basic_application_handler_service :
     public boost::asio::detail::service_base<basic_application_handler_service>
   {
   public:
-    typedef boost::shared_ptr<apoa::application_handler_impl>
+    typedef std::shared_ptr<apoa::application_handler_impl>
       implementation_type;
 
   public:

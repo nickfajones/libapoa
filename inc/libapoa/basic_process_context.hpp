@@ -16,9 +16,8 @@
 #include <string>
 #include <list>
 #include <map>
+#include <memory>
 
-#include <boost/shared_array.hpp>
-#include <boost/shared_ptr.hpp>
 #include <boost/system/error_code.hpp>
 #include <boost/asio.hpp>
 
@@ -95,7 +94,7 @@ class basic_process_context
       status_type status;
       };
 
-    boost::shared_ptr<details> details_;
+    std::shared_ptr<details> details_;
   };
 
 }; // namespace apoa

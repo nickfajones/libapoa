@@ -10,13 +10,13 @@
 ###############################################################################
  */
 
+#include <signal.h>
+
 #include <string>
 #include <list>
 #include <map>
-#include <signal.h>
+#include <memory>
 
-#include <boost/shared_array.hpp>
-#include <boost/shared_ptr.hpp>
 #include <boost/system/error_code.hpp>
 #include <boost/asio.hpp>
 

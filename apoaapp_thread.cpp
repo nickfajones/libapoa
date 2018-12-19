@@ -10,9 +10,8 @@
  */
 
 #include <string>
+#include <memory>
 
-#include <boost/enable_shared_from_this.hpp>
-#include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
 #include <boost/asio.hpp>
@@ -24,7 +23,7 @@
 
 
 //#############################################################################
-class mythread : public boost::enable_shared_from_this<mythread>
+class mythread : public std::enable_shared_from_this<mythread>
   {
   public:
     explicit mythread(boost::asio::io_service& io_service) :
@@ -117,7 +116,7 @@ class mythread : public boost::enable_shared_from_this<mythread>
 
 
 //#############################################################################
-class myapp : public boost::enable_shared_from_this<myapp>
+class myapp : public std::enable_shared_from_this<myapp>
   {
   public:
     explicit myapp(boost::asio::io_service& io_service) :
@@ -147,7 +146,7 @@ class myapp : public boost::enable_shared_from_this<myapp>
       {
       assert(!ec);
 
-      boost::shared_ptr<myapp> app(new myapp(io_service));
+      std::shared_ptr<myapp> app(new myapp(io_service));
       io_service.post(boost::bind(&myapp::start, app));
       }
 
@@ -185,7 +184,7 @@ class myapp : public boost::enable_shared_from_this<myapp>
       }
 
   public:
-    void on_thread_started(boost::shared_ptr<mythread> thread)
+    void on_thread_started(std::shared_ptr<mythread> thread)
       {
       threads_.push_back(thread);
       }
@@ -196,7 +195,7 @@ class myapp : public boost::enable_shared_from_this<myapp>
       {
       assert(!ec);
 
-      boost::shared_ptr<mythread> thread(new mythread(io_service));
+      std::shared_ptr<mythread> thread(new mythread(io_service));
       thread->start_timer();
 
       io_service_.post(
@@ -307,7 +306,7 @@ class myapp : public boost::enable_shared_from_this<myapp>
     apoa::signal_handler sigusr1_handler_;
     apoa::signal_handler sigusr2_handler_;
 
-    std::vector<boost::shared_ptr<mythread> > threads_;
+    std::vector<std::shared_ptr<mythread> > threads_;
 
     unsigned int threads__starting_;
     unsigned int threads__max_;

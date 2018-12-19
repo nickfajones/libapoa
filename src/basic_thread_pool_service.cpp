@@ -11,8 +11,6 @@
  */
 
 
-#include <boost/smart_ptr/make_shared.hpp>
-
 #include <libapoa/basic_thread_pool_service.hpp>
 
 

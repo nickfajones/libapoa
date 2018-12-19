@@ -10,7 +10,6 @@
 ###############################################################################
  */
 
-#include <boost/shared_ptr.hpp>
 #include <boost/system/error_code.hpp>
 #include <boost/asio.hpp>
 

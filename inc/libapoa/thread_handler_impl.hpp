@@ -53,23 +53,23 @@ class thread_handler_impl
 
   private:
     void insert_thread(
-      boost::shared_ptr<thread_registration> registration);
+      std::shared_ptr<thread_registration> registration);
     void start_thread(
-      boost::shared_ptr<thread_registration> registration);
+      std::shared_ptr<thread_registration> registration);
     void on_thread_created(
-      boost::shared_ptr<thread_registration> registration);
+      std::shared_ptr<thread_registration> registration);
 
     void shutdown_thread1(
-      boost::shared_ptr<thread_registration> registration);
+      std::shared_ptr<thread_registration> registration);
     void shutdown_thread2(
-      boost::shared_ptr<thread_registration> registration);
+      std::shared_ptr<thread_registration> registration);
       
   private:
     boost::mutex threads_mutex_;
     
     std::map<
       pid_t,
-      boost::shared_ptr<thread_registration> > threads_;
+      std::shared_ptr<thread_registration> > threads_;
   };
 
 }; // namespace apoa

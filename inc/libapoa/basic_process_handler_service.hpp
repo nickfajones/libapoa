@@ -13,7 +13,8 @@
 #ifndef LIBAPOA_BASIC_PROCESS_HANDLER_SERVICE_HPP
 #define LIBAPOA_BASIC_PROCESS_HANDLER_SERVICE_HPP
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
+
 #include <boost/system/error_code.hpp>
 #include <boost/asio.hpp>
 
@@ -29,7 +30,7 @@ class basic_process_handler_service :
     public boost::asio::detail::service_base<basic_process_handler_service>
   {
   public:
-    typedef boost::shared_ptr<process_handler_impl> implementation_type;
+    typedef std::shared_ptr<process_handler_impl> implementation_type;
     
   public:
     explicit basic_process_handler_service(

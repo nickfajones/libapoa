@@ -21,7 +21,7 @@ namespace apoa
 
 //#############################################################################
 class process_handler_impl :
-    public boost::enable_shared_from_this<process_handler_impl>
+    public std::enable_shared_from_this<process_handler_impl>
   {
   public:
     typedef boost::function<

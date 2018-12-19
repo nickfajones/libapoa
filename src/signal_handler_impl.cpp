@@ -20,9 +20,9 @@
 
 #include <set>
 #include <map>
+#include <memory>
 
 #include <boost/noncopyable.hpp>
-#include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
 #include <boost/thread.hpp>
@@ -40,13 +40,13 @@ namespace apoa
 //#############################################################################
 boost::mutex _signal_mutex;
 
-typedef std::set<boost::shared_ptr<signal_handler_base_impl> > requests_set;
+typedef std::set<std::shared_ptr<signal_handler_base_impl> > requests_set;
 typedef std::map<signal_handler_base_impl::sigaction_key, requests_set>
   signal_handler_map;
 
 signal_handler_map _signal_handlers;
 
-boost::shared_ptr<signal_handler_base_impl::sigaction_handler>
+std::shared_ptr<signal_handler_base_impl::sigaction_handler>
   _sigaction_handler;
 
 
@@ -161,7 +161,7 @@ void signal_handler_base_impl::sigaction_handler::on_descriptor_read(
          itr != requests.end();
          itr++)
       {
-      boost::shared_ptr<signal_handler_base_impl> request = *itr;
+      std::shared_ptr<signal_handler_base_impl> request = *itr;
       
       {
       boost::lock_guard<boost::mutex> active_lock(request->active_mutex_);
@@ -451,7 +451,7 @@ posix_signal_handler_impl::~posix_signal_handler_impl()
 //#############################################################################
 void posix_signal_handler_impl::create_sigaction_handler(
     boost::asio::io_service& io_service,
-    boost::shared_ptr<sigaction_handler>& handler)
+    std::shared_ptr<sigaction_handler>& handler)
   {
   handler.reset(new posix_sigaction_handler(io_service));
   }
@@ -590,7 +590,7 @@ signalfd_signal_handler_impl::~signalfd_signal_handler_impl()
 //#############################################################################
 void signalfd_signal_handler_impl::create_sigaction_handler(
     boost::asio::io_service& io_service,
-    boost::shared_ptr<sigaction_handler>& handler)
+    std::shared_ptr<sigaction_handler>& handler)
   {
   handler.reset(new signalfd_sigaction_handler(io_service));
   }

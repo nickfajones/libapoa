@@ -13,7 +13,6 @@
 #ifndef LIBAPOA_BASIC_SIGNAL_HANDLER_HPP
 #define LIBAPOA_BASIC_SIGNAL_HANDLER_HPP
 
-#include <boost/shared_ptr.hpp>
 #include <boost/asio.hpp>
 
 #include <libapoa/basic_signal_handler_siginfo.hpp>

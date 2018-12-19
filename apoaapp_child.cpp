@@ -9,9 +9,8 @@
  */
 
 #include <string>
+#include <memory>
 
-#include <boost/enable_shared_from_this.hpp>
-#include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
 #include <boost/asio.hpp>
@@ -23,7 +22,7 @@
 
 
 //#############################################################################
-class myapp : public boost::enable_shared_from_this<myapp>
+class myapp : public std::enable_shared_from_this<myapp>
   {
   public:
     explicit myapp(boost::asio::io_service& io_service) :
@@ -49,7 +48,7 @@ class myapp : public boost::enable_shared_from_this<myapp>
       {
       assert(!ec);
 
-      boost::shared_ptr<myapp> app(new myapp(io_service));
+      std::shared_ptr<myapp> app(new myapp(io_service));
       io_service.post(boost::bind(&myapp::start, app));
       }
 

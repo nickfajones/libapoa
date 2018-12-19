@@ -23,7 +23,7 @@ namespace apoa
 
 //#############################################################################
 class basic_thread_pool_impl :
-    public boost::enable_shared_from_this<basic_thread_pool_impl>
+    public std::enable_shared_from_this<basic_thread_pool_impl>
   {
   private:
     typedef std::map<pid_t, boost::asio::io_service&> threads_map;

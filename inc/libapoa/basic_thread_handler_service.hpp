@@ -23,7 +23,7 @@ class basic_thread_handler_service :
     public boost::asio::detail::service_base<basic_thread_handler_service>
   {
   public:
-    typedef boost::shared_ptr<apoa::thread_handler_impl>
+    typedef std::shared_ptr<apoa::thread_handler_impl>
       implementation_type;
     
   public:

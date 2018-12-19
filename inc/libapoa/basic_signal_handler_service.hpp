@@ -12,7 +12,8 @@
 #ifndef LIBAPOA_BASIC_SIGNAL_HANDLER_SERVICE_HPP
 #define LIBAPOA_BASIC_SIGNAL_HANDLER_SERVICE_HPP
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
+
 #include <boost/system/error_code.hpp>
 #include <boost/asio.hpp>
 
@@ -30,7 +31,7 @@ class basic_signal_handler_service :
   public boost::asio::detail::service_base<basic_signal_handler_service>
   {
   public:
-    typedef boost::shared_ptr<signal_handler_base_impl> implementation_type;
+    typedef std::shared_ptr<signal_handler_base_impl> implementation_type;
 #ifdef __linux__
     typedef signalfd_signal_handler_impl implementation_subtype;
 #else
