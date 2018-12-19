@@ -120,8 +120,8 @@ build_CPPFLAGS  += -isystem $(BOOSTDIR)/include
 dev_LDFLAGS     += -L$(BOOSTLIB)$(arch_LIB) -Wl,-rpath=$(BOOSTLIB)$(arch_LIB)
 build_LDFLAGS   += -L$(BOOSTLIB)$(arch_LIB) -Wl,-rpath=$(BOOSTLIB)$(arch_LIB)
 endif
-dev_LIBS        += -lboost_system -lboost_filesystem -lboost_thread -lboost_program_options
-build_LIBS      += -lboost_system -lboost_filesystem -lboost_thread -lboost_program_options
+dev_LIBS        += -lboost_system -lboost_filesystem -lboost_program_options
+build_LIBS      += -lboost_system -lboost_filesystem -lboost_program_options
 
 
 ##########################################################################

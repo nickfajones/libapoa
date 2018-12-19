@@ -88,7 +88,7 @@ namespace priv
 //#############################################################################
 int32_t per_thread_registry::index_id_(0);
 
-boost::mutex per_thread_registry::callback_mutex_;
+std::mutex per_thread_registry::callback_mutex_;
 
 per_thread_registry::per_thread_index_callback_map
   per_thread_registry::thread_start_callbacks_;

@@ -10,6 +10,7 @@
  */
 
 #include <system_error>
+#include <thread>
 
 #include "thread_handler.hpp"
 
@@ -21,7 +22,7 @@ namespace apoa
 per_thread_index<thread_handler::thread_registration>
   thread_handler::thread_registry_(-1);
 
-boost::mutex thread_handler::tid_tenum_map_mutex_;
+std::mutex thread_handler::tid_tenum_map_mutex_;
 std::map<pid_t, tenum_t> thread_handler::tid_tenum_map_;
 
 
@@ -64,7 +65,7 @@ thread_handler::~thread_handler()
 int thread_handler::start_main_thread(thread_callback handler)
   {
   {
-  boost::lock_guard<boost::mutex> pool_lock(tid_tenum_map_mutex_);
+  std::lock_guard<std::mutex> pool_lock(tid_tenum_map_mutex_);
   tid_tenum_map_.insert(std::make_pair(get_tid(), get_tenum()));
   }
 
@@ -86,7 +87,7 @@ int thread_handler::start_main_thread(thread_callback handler)
   int retval = registration->retval_;
 
   {
-  boost::lock_guard<boost::mutex> pool_lock(tid_tenum_map_mutex_);
+  std::lock_guard<std::mutex> pool_lock(tid_tenum_map_mutex_);
   tid_tenum_map_.erase(registration->tid_);
   }
 
@@ -104,13 +105,11 @@ void thread_handler::create_thread(thread_callback handler)
   try
     {
     registration->system_thread_ =
-      new boost::thread(
+      new std::thread(
         boost::bind(&on_thread_created, registration));
     }
-  catch (boost::thread_resource_error& err)
+  catch (std::error_code& ec)
     {
-    std::error_code ec(errno, std::system_category());
-
     io_service_.post(
       boost::bind(handler, ec, boost::ref(io_service_)));
     }
@@ -127,7 +126,7 @@ void thread_handler::on_thread_created(thread_registration* registration)
   }
 
   {
-  boost::lock_guard<boost::mutex> pool_lock(tid_tenum_map_mutex_);
+  std::lock_guard<std::mutex> pool_lock(tid_tenum_map_mutex_);
   tid_tenum_map_.insert(std::make_pair(get_tid(), get_tenum()));
   }
 
@@ -186,7 +185,7 @@ void thread_handler::shutdown_thread_tid(pid_t tid, int retval)
   tenum_t tenum(0);
 
   {
-  boost::lock_guard<boost::mutex> tid_tenum_map_lock(tid_tenum_map_mutex_);
+  std::lock_guard<std::mutex> tid_tenum_map_lock(tid_tenum_map_mutex_);
   tenum = tid_tenum_map_.find(tid)->second;
   }
 
@@ -222,7 +221,7 @@ void thread_handler::shutdown_thread(tenum_t tenum, int retval)
     return;
     }
 
-  boost::lock_guard<boost::mutex> callback_lock(
+  std::lock_guard<std::mutex> callback_lock(
     priv::per_thread_registry::callback_mutex_);
 
   // Main thread
@@ -286,7 +285,7 @@ void thread_handler::join_thread(apoa::tenum_t tenum)
   registration.system_thread_ = NULL;
 
   {
-  boost::lock_guard<boost::mutex> pool_lock(tid_tenum_map_mutex_);
+  std::lock_guard<std::mutex> pool_lock(tid_tenum_map_mutex_);
   tid_tenum_map_.erase(registration.tid_);
   }
   }
@@ -296,7 +295,7 @@ void thread_handler::join_thread(apoa::tenum_t tenum)
   thread_registration& process_registration =
     thread_registry_.get(0);
 
-  boost::lock_guard<boost::mutex> callback_lock(
+  std::lock_guard<std::mutex> callback_lock(
     priv::per_thread_registry::callback_mutex_);
 
   if (process_registration.is_shutdown_started_ &&
@@ -313,7 +312,7 @@ asio::io_service& thread_handler::get_io_service_tid(pid_t tid)
   tenum_t tenum(0);
 
   {
-  boost::lock_guard<boost::mutex> tid_tenum_map_lock(tid_tenum_map_mutex_);
+  std::lock_guard<std::mutex> tid_tenum_map_lock(tid_tenum_map_mutex_);
   tenum = tid_tenum_map_.find(tid)->second;
   }
 

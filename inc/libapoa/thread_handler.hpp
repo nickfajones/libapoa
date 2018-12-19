@@ -12,6 +12,8 @@
 #ifndef LIBAPOA_THREAD_HANDLER_HPP
 #define LIBAPOA_THREAD_HANDLER_HPP
 
+#include <thread>
+
 #include <asio.hpp>
 
 #include <libapoa/common.hpp>
@@ -48,7 +50,7 @@ class thread_handler
         thread_callback start_handler_;
 
       public:
-        boost::thread* system_thread_;
+        std::thread* system_thread_;
 
       public:
         asio::io_service* thread_io_service_;
@@ -90,7 +92,7 @@ class thread_handler
     static per_thread_index<thread_registration> thread_registry_;
 
   private:
-    static boost::mutex tid_tenum_map_mutex_;
+    static std::mutex tid_tenum_map_mutex_;
     static std::map<pid_t, tenum_t> tid_tenum_map_;
 
   private:

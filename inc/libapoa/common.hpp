@@ -28,7 +28,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
 #include <boost/function.hpp>
-#include <boost/thread.hpp>
+#include <boost/bind.hpp>
 
 #include <asio.hpp>
 
@@ -241,7 +241,7 @@ class per_thread_registry
   private:
     static void init()
       {
-      boost::lock_guard<boost::mutex> callback_lock(callback_mutex_);
+      std::lock_guard<std::mutex> callback_lock(callback_mutex_);
 
       thread_set_.insert(0);
       }
@@ -249,7 +249,7 @@ class per_thread_registry
   private:
     static void thread_start()
       {
-      boost::lock_guard<boost::mutex> callback_lock(callback_mutex_);
+      std::lock_guard<std::mutex> callback_lock(callback_mutex_);
 
       thread_set_.insert(get_tenum());
 
@@ -264,7 +264,7 @@ class per_thread_registry
 
     static void thread_finish()
       {
-      boost::lock_guard<boost::mutex> callback_lock(callback_mutex_);
+      std::lock_guard<std::mutex> callback_lock(callback_mutex_);
 
       for (per_thread_index_callback_map::iterator itr =
              thread_finish_callbacks_.begin();
@@ -281,7 +281,7 @@ class per_thread_registry
     static int32_t index_id_;
 
   protected:
-    static boost::mutex callback_mutex_;
+    static std::mutex callback_mutex_;
 
     static per_thread_index_callback_map thread_start_callbacks_;
     static per_thread_index_callback_map thread_finish_callbacks_;
@@ -312,7 +312,7 @@ class per_thread_index : public priv::per_thread_registry
       index_ = new T*[index_size_];
       memset(index_, 0, sizeof(T*) * index_size_);
 
-      boost::lock_guard<boost::mutex> callback_lock(callback_mutex_);
+      std::lock_guard<std::mutex> callback_lock(callback_mutex_);
 
       thread_start_callbacks_.insert(
         std::make_pair(
@@ -342,13 +342,13 @@ class per_thread_index : public priv::per_thread_registry
       {
       if (id_ >= 0)
         {
-        boost::lock_guard<boost::mutex> callback_lock(callback_mutex_);
+        std::lock_guard<std::mutex> callback_lock(callback_mutex_);
 
         thread_start_callbacks_.erase(id_);
         thread_finish_callbacks_.erase(id_);
         }
 
-      boost::lock_guard<boost::mutex> index_lock(index_mutex_);
+      std::lock_guard<std::mutex> index_lock(index_mutex_);
 
       for (ssize_t counter = index_size_ - 1;
            counter >= 0;
@@ -379,7 +379,7 @@ class per_thread_index : public priv::per_thread_registry
 
     void do_on_thread_start(apoa::tenum_t tenum, T* t)
       {
-      boost::lock_guard<boost::mutex> index_lock(index_mutex_);
+      std::lock_guard<std::mutex> index_lock(index_mutex_);
 
       if (tenum.tenum_ >= index_size_)
         {
@@ -412,7 +412,7 @@ class per_thread_index : public priv::per_thread_registry
 
     void do_on_thread_finish(apoa::tenum_t tenum)
       {
-      boost::lock_guard<boost::mutex> index_lock(index_mutex_);
+      std::lock_guard<std::mutex> index_lock(index_mutex_);
 
       assert(index_[tenum.tenum_] != NULL);
       delete index_[tenum.tenum_];
@@ -423,7 +423,7 @@ class per_thread_index : public priv::per_thread_registry
     int32_t id_;
 
   private:
-    boost::mutex index_mutex_;
+    std::mutex index_mutex_;
 
     size_t index_size_;
 

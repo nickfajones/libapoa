@@ -19,7 +19,6 @@
 
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
-#include <boost/thread.hpp>
 
 #include <asio.hpp>
 
@@ -65,7 +64,7 @@ class thread_handler_impl
       std::shared_ptr<thread_registration> registration);
       
   private:
-    boost::mutex threads_mutex_;
+    std::mutex threads_mutex_;
     
     std::map<
       pid_t,

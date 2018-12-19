@@ -21,7 +21,6 @@
 #include <boost/noncopyable.hpp>
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
-#include <boost/thread.hpp>
 
 #include <asio.hpp>
 
@@ -135,7 +134,7 @@ class signal_handler_base_impl :
     
     asio::io_service& io_service_;
 
-    boost::mutex active_mutex_;
+    std::mutex active_mutex_;
     basic_signal_callback callback_;
     bool active_;
   };

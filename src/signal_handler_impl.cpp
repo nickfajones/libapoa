@@ -26,7 +26,6 @@
 #include <boost/noncopyable.hpp>
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
-#include <boost/thread.hpp>
 
 #include <asio.hpp>
 
@@ -39,7 +38,7 @@ namespace apoa
 {
 
 //#############################################################################
-boost::mutex _signal_mutex;
+std::mutex _signal_mutex;
 
 typedef std::set<std::shared_ptr<signal_handler_base_impl> > requests_set;
 typedef std::map<signal_handler_base_impl::sigaction_key, requests_set>
@@ -69,7 +68,7 @@ signal_handler_base_impl::sigaction_key::sigaction_key(
 signal_handler_base_impl::sigaction_key::~sigaction_key()
   {
   signum_ = 0;
-  
+
   memset(&old_sa_, 0, sizeof(old_sa_));
   }
 
@@ -107,7 +106,7 @@ void signal_handler_base_impl::sigaction_handler::init()
     {
     return;
     }
-  
+
   signal_descriptor_.assign(descriptor);
   signal_descriptor_.async_read_some(
     asio::buffer(signal_descriptor_buffer_),
@@ -130,14 +129,14 @@ void signal_handler_base_impl::sigaction_handler::on_descriptor_read(
       signal_descriptor_.release();
       }
     close_descriptor();
-    
+
     return;
     }
-  
-  boost::unique_lock<boost::mutex> signal_lock(_signal_mutex);
-  
+
+  std::lock_guard<std::mutex> signal_lock(_signal_mutex);
+
   block_signals();
-  
+
   buffer_end_ += bytes_transferred;
   std::size_t offset = 0;
 
@@ -149,39 +148,39 @@ void signal_handler_base_impl::sigaction_handler::on_descriptor_read(
 
     signal_handler_map::iterator signals_itr =
       _signal_handlers.find(bsi->bsi_signo);
-    
+
     if (signals_itr == _signal_handlers.end())
       {
       continue;
       }
-    
+
     requests_set& requests = signals_itr->second;
-    
+
     for (requests_set::iterator itr =
            requests.begin();
          itr != requests.end();
          itr++)
       {
       std::shared_ptr<signal_handler_base_impl> request = *itr;
-      
+
       {
-      boost::lock_guard<boost::mutex> active_lock(request->active_mutex_);
+      std::lock_guard<std::mutex> active_lock(request->active_mutex_);
       if (!request->active_)
         {
         continue;
         }
       }
-      
+
       std::error_code ec2;
-      
+
       request->io_service_.post(
         boost::bind(request->callback_, ec2, *bsi));
-      
+
       request->callback_ = NULL;
       request->active_ = false;
       }
     }
-  
+
   if (buffer_end_ > 0)
     {
     memcpy(
@@ -199,7 +198,7 @@ void signal_handler_base_impl::sigaction_handler::on_descriptor_read(
       shared_from_this(),
       asio::placeholders::error,
       asio::placeholders::bytes_transferred));
-  
+
   unblock_signals();
   }
 
@@ -222,8 +221,8 @@ signal_handler_base_impl::~signal_handler_base_impl()
 //#############################################################################
 void signal_handler_base_impl::deactivate()
   {
-  boost::lock_guard<boost::mutex> active_lock(active_mutex_);
-  
+  std::lock_guard<std::mutex> active_lock(active_mutex_);
+
   callback_ = NULL;
   active_ = false;
   }
@@ -241,21 +240,21 @@ std::size_t signal_handler_base_impl::cancel(std::error_code& ec)
       boost::bind(
         &signal_handler_base_impl::async_unhandle, shared_from_this()));
     }
-  
-  boost::lock_guard<boost::mutex> active_lock(active_mutex_);
+
+  std::lock_guard<std::mutex> active_lock(active_mutex_);
   if (active_ == false)
     {
     return 0;
     }
-  
+
   std::error_code ec2 = asio::error::operation_aborted;
   struct basic_siginfo bsi;
-  
+
   io_service_.post(boost::bind(callback_, ec2, bsi));
-  
+
   callback_ = NULL;
   active_ = false;
-  
+
   return 1;
   }
 
@@ -270,18 +269,18 @@ void signal_handler_base_impl::handle(
     int signum, std::error_code& ec)
   {
   signum_ = signum;
-  
-  boost::unique_lock<boost::mutex> signal_lock(_signal_mutex);
-  
+
+  std::lock_guard<std::mutex> signal_lock(_signal_mutex);
+
   signal_handler_map::iterator signals_itr = _signal_handlers.find(
     sigaction_key(signum_));
-  
+
   if (signals_itr == _signal_handlers.end())
     {
     _signal_handlers.insert(
       signal_handler_map::value_type(
         sigaction_key(signum_), requests_set()));
-    
+
     if (_signal_handlers.size() == 1)
       {
       create_sigaction_handler(
@@ -289,34 +288,34 @@ void signal_handler_base_impl::handle(
         _sigaction_handler);
       _sigaction_handler->init();
       }
-    
+
     signals_itr = _signal_handlers.find(sigaction_key(signum_));
     const sigaction_key& request_key = signals_itr->first;
-    
+
     add_sigaction(request_key, ec);
     if (ec)
       {
       _signal_handlers.erase(request_key);
-      
+
       if (_signal_handlers.size() == 0)
         {
         _sigaction_handler->close_descriptor();
         _sigaction_handler.reset();
         }
-      
+
       return;
       }
     }
-  
+
   requests_set& requests = signals_itr->second;
-  
+
   requests.insert(shared_from_this());
   }
 
 //#############################################################################
 void signal_handler_base_impl::async_wait(basic_signal_callback callback)
   {
-  boost::lock_guard<boost::mutex> active_lock(active_mutex_);
+  std::lock_guard<std::mutex> active_lock(active_mutex_);
   callback_ = callback;
   active_ = true;
   }
@@ -331,7 +330,7 @@ void signal_handler_base_impl::async_unhandle()
 void signal_handler_base_impl::unhandle(
     std::error_code& ec)
   {
-  boost::unique_lock<boost::mutex> signal_lock(_signal_mutex);
+  std::lock_guard<std::mutex> signal_lock(_signal_mutex);
 
   signal_handler_map::iterator signals_itr = _signal_handlers.find(
     sigaction_key(signum_));
@@ -396,17 +395,17 @@ signal_handler_base_impl::basic_signal_descriptor&
     _posix_signal_pipe[0] = -1;
     _posix_signal_pipe[1] = -1;
     }
-  
+
   int fcntl_flags = fcntl(_posix_signal_pipe[0], F_GETFD);
   fcntl(_posix_signal_pipe[0], F_SETFD, fcntl_flags | FD_CLOEXEC);
   fcntl_flags = fcntl(_posix_signal_pipe[0], F_GETFL);
   fcntl(_posix_signal_pipe[0], F_SETFL, fcntl_flags | O_NONBLOCK);
-  
+
   fcntl_flags = fcntl(_posix_signal_pipe[1], F_GETFD);
   fcntl(_posix_signal_pipe[1], F_SETFD, fcntl_flags | FD_CLOEXEC);
   fcntl_flags = fcntl(_posix_signal_pipe[1], F_GETFL);
   fcntl(_posix_signal_pipe[1], F_SETFL, fcntl_flags | O_NONBLOCK);
-  
+
   return _posix_signal_pipe[0];
   }
 
@@ -416,7 +415,7 @@ void posix_signal_handler_impl::posix_sigaction_handler::close_descriptor()
     {
     close(_posix_signal_pipe[0]);
     close(_posix_signal_pipe[1]);
-    
+
     _posix_signal_pipe[0] = -1;
     _posix_signal_pipe[1] = -1;
     }
@@ -427,7 +426,7 @@ void posix_signal_handler_impl::posix_sigaction_handler::block_signals()
   {
   sigset_t block_sigset;
   sigfillset(&block_sigset);
-  
+
   pthread_sigmask(SIG_SETMASK, &block_sigset, NULL);
   }
 
@@ -463,11 +462,11 @@ void posix_signal_handler_impl::add_sigaction(
   {
   struct sigaction sa;
   memset(&sa, 0, sizeof(sa));
-  
+
   sa.sa_sigaction = &handle_sigaction;
   sigemptyset(&sa.sa_mask);
   sa.sa_flags = SA_SIGINFO | SA_RESTART;
-  
+
   if (sigaction(key.signum_, &sa, &key.old_sa_))
     {
     ec.assign(errno, std::system_category());
@@ -486,7 +485,7 @@ void posix_signal_handler_impl::handle_sigaction(
   {
   struct basic_siginfo temp_bsi;
   memset(&temp_bsi, 0, sizeof(temp_bsi));
-  
+
 #ifdef __linux__
   temp_bsi.bsi_signo = info->si_signo;
   temp_bsi.bsi_errno = info->si_errno;
@@ -504,7 +503,7 @@ void posix_signal_handler_impl::handle_sigaction(
   temp_bsi.bsi_stime = info->si_stime;
   temp_bsi.bsi_addr = reinterpret_cast<uint64_t>(info->si_addr);
   temp_bsi.bsi_ttid = get_tid();
-  
+
 #elif defined __APPLE__
   temp_bsi.bsi_signo = info->si_signo;
   temp_bsi.bsi_errno = info->si_errno;
@@ -516,7 +515,7 @@ void posix_signal_handler_impl::handle_sigaction(
   memcpy(&temp_bsi.bsi_value, &info->si_value, sizeof(info->si_value));
   temp_bsi.bsi_band = info->si_band;
 #endif
-  
+
   if (_posix_signal_pipe[1] != -1)
     {
     write(_posix_signal_pipe[1], &temp_bsi, sizeof(struct basic_siginfo));
@@ -552,7 +551,7 @@ signal_handler_base_impl::basic_signal_descriptor&
   {
   _signalfd_fd = signalfd(
     -1, &_signalfd_process_sigset, SFD_NONBLOCK | SFD_CLOEXEC);
-  
+
   return _signalfd_fd;
   }
 
@@ -561,7 +560,7 @@ void signalfd_signal_handler_impl::signalfd_sigaction_handler::close_descriptor(
   if (_signalfd_fd != -1)
     {
     close(_signalfd_fd);
-    
+
     _signalfd_fd = -1;
     }
   }
@@ -601,14 +600,14 @@ void signalfd_signal_handler_impl::add_sigaction(
     const sigaction_key& key, std::error_code& ec)
   {
   sigaddset(&_signalfd_process_sigset, key.signum_);
-  
+
   if (pthread_sigmask(SIG_SETMASK, &_signalfd_process_sigset, NULL))
     {
     ec.assign(errno, std::system_category());
-    
+
     return;
     }
-  
+
   if (signalfd(_signalfd_fd, &_signalfd_process_sigset, 0) == -1)
     {
     ec.assign(errno, std::system_category());
@@ -619,9 +618,9 @@ void signalfd_signal_handler_impl::remove_sigaction(
     const sigaction_key& key, std::error_code& ec)
   {
   sigdelset(&_signalfd_process_sigset, key.signum_);
-  
+
   signalfd(_signalfd_fd, &_signalfd_process_sigset, 0);
-  
+
   pthread_sigmask(SIG_SETMASK, &_signalfd_process_sigset, NULL);
   }
 

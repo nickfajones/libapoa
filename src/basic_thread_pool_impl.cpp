@@ -41,7 +41,7 @@ void basic_thread_pool_impl::create_pool(
     return;
     }
 
-  boost::lock_guard<boost::mutex> pool_lock(pool_mutex_);
+  std::lock_guard<std::mutex> pool_lock(pool_mutex_);
   if (pool_.size() > 0 || pool_size_ != 0)
     {
     ec.assign(EALREADY, std::system_category());
@@ -72,7 +72,7 @@ void basic_thread_pool_impl::on_thread_created(
 
   pid_t tid = apoa::get_tid();
 
-  boost::lock_guard<boost::mutex> pool_lock(pool_mutex_);
+  std::lock_guard<std::mutex> pool_lock(pool_mutex_);
 
   BOOST_ASSERT(pool_.find(tid) == pool_.end() &&
     "basic_thread_pool_impl: create existing thread id");
@@ -83,7 +83,7 @@ void basic_thread_pool_impl::on_thread_created(
 //#############################################################################
 void basic_thread_pool_impl::destroy_pool()
   {
-  boost::lock_guard<boost::mutex> pool_lock(pool_mutex_);
+  std::lock_guard<std::mutex> pool_lock(pool_mutex_);
 
   pool_size_ = 0;
   if (pool_.size() == 0)
@@ -98,7 +98,7 @@ void basic_thread_pool_impl::destroy_pool()
 asio::io_service& basic_thread_pool_impl::get_thread_service(
     std::error_code& ec)
   {
-  boost::lock_guard<boost::mutex> pool_lock(pool_mutex_);
+  std::lock_guard<std::mutex> pool_lock(pool_mutex_);
 
   if (pool_.size() == 0)
     {

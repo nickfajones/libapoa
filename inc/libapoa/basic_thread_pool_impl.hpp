@@ -17,8 +17,6 @@
 
 #include <libapoa/thread_handler.hpp>
 
-#include <boost/thread.hpp>
-
 #include <asio.hpp>
 
 
@@ -51,7 +49,7 @@ class basic_thread_pool_impl :
     thread_handler thread_handler_;
 
   private:
-    boost::mutex pool_mutex_;
+    std::mutex pool_mutex_;
 
     threads_map pool_;
     threads_map::iterator iter_;
