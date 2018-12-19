@@ -16,6 +16,8 @@
 
 #include <boost/bind.hpp>
 
+#include <asio.hpp>
+
 #include <libapoa/common.hpp>
 #include <libapoa/thread_handler_types.hpp>
 #include <libapoa/basic_application_handler_service.hpp>
@@ -26,12 +28,12 @@ namespace apoa
 
 //#############################################################################
 class basic_application_handler :
-    public boost::asio::basic_io_object<basic_application_handler_service>
+    public asio::basic_io_object<basic_application_handler_service>
   {
   public:
     explicit basic_application_handler(
-        boost::asio::io_service& io_service) :
-      boost::asio::basic_io_object<basic_application_handler_service>(io_service)
+        asio::io_service& io_service) :
+      asio::basic_io_object<basic_application_handler_service>(io_service)
       {
       }
     ~basic_application_handler()

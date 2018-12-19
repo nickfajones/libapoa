@@ -16,13 +16,14 @@
 #include <signal.h>
 
 #include <memory>
+#include <system_error>
 
 #include <boost/noncopyable.hpp>
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
-#include <boost/system/error_code.hpp>
-#include <boost/asio.hpp>
 #include <boost/thread.hpp>
+
+#include <asio.hpp>
 
 #include <libapoa/basic_signal_handler_siginfo.hpp>
 
@@ -42,30 +43,30 @@ class signal_handler_base_impl :
     
   protected:
     typedef boost::function<
-      void (const boost::system::error_code&, struct basic_siginfo)>
+      void (const std::error_code&, struct basic_siginfo)>
         basic_signal_callback;
     
-    typedef boost::asio::posix::stream_descriptor_service::native_handle_type
+    typedef asio::posix::stream_descriptor_service::native_handle_type
       basic_signal_descriptor;
     
   public:
-    explicit signal_handler_base_impl(boost::asio::io_service& io_service);
+    explicit signal_handler_base_impl(asio::io_service& io_service);
     ~signal_handler_base_impl();
     
   public:
     void deactivate();
 
   public:
-    std::size_t cancel(boost::system::error_code& ec);
+    std::size_t cancel(std::error_code& ec);
 
     void handle(int signum);
-    void handle(int signum, boost::system::error_code& ec);
+    void handle(int signum, std::error_code& ec);
     
     void async_wait(basic_signal_callback callback);
     
   public:
     void async_unhandle();
-    void unhandle(boost::system::error_code& ec);
+    void unhandle(std::error_code& ec);
 
   public:
     class sigaction_key : public boost::noncopyable
@@ -90,7 +91,7 @@ class signal_handler_base_impl :
         public std::enable_shared_from_this<sigaction_handler>
       {
       protected:
-        sigaction_handler(boost::asio::io_service& io_service);
+        sigaction_handler(asio::io_service& io_service);
         
       public:
         virtual ~sigaction_handler();
@@ -108,11 +109,11 @@ class signal_handler_base_impl :
         
       private:
         void on_descriptor_read(
-          const boost::system::error_code& ec,
+          const std::error_code& ec,
           std::size_t bytes_transferred);
         
       private:
-        boost::asio::posix::stream_descriptor signal_descriptor_;
+        asio::posix::stream_descriptor signal_descriptor_;
         
         struct basic_siginfo signal_descriptor_buffer_[64];
         std::size_t buffer_end_;
@@ -120,19 +121,19 @@ class signal_handler_base_impl :
     
   protected:
     virtual void create_sigaction_handler(
-      boost::asio::io_service& io_service,
+      asio::io_service& io_service,
       std::shared_ptr<sigaction_handler>& handler) = 0;
       
   protected:
     virtual void add_sigaction(
-      const sigaction_key& key, boost::system::error_code& ec) = 0;
+      const sigaction_key& key, std::error_code& ec) = 0;
     virtual void remove_sigaction(
-      const sigaction_key& key, boost::system::error_code& ec) = 0;
+      const sigaction_key& key, std::error_code& ec) = 0;
     
   private:
     int signum_;
     
-    boost::asio::io_service& io_service_;
+    asio::io_service& io_service_;
 
     boost::mutex active_mutex_;
     basic_signal_callback callback_;
@@ -146,7 +147,7 @@ class posix_signal_handler_impl : public signal_handler_base_impl
   {
   public:
     explicit posix_signal_handler_impl(
-      boost::asio::io_service& io_service);
+      asio::io_service& io_service);
     virtual ~posix_signal_handler_impl();
     
   protected:
@@ -154,7 +155,7 @@ class posix_signal_handler_impl : public signal_handler_base_impl
         public signal_handler_base_impl::sigaction_handler
       {
       public:
-        posix_sigaction_handler(boost::asio::io_service& io_service);
+        posix_sigaction_handler(asio::io_service& io_service);
         virtual ~posix_sigaction_handler();
         
       public:
@@ -168,14 +169,14 @@ class posix_signal_handler_impl : public signal_handler_base_impl
     
   protected:
     virtual void create_sigaction_handler(
-      boost::asio::io_service& io_service,
+      asio::io_service& io_service,
       std::shared_ptr<sigaction_handler>& handler);
     
   protected:
     virtual void add_sigaction(
-      const sigaction_key& key, boost::system::error_code& ec);
+      const sigaction_key& key, std::error_code& ec);
     virtual void remove_sigaction(
-      const sigaction_key& key, boost::system::error_code& ec);
+      const sigaction_key& key, std::error_code& ec);
     
   private:
     static void handle_sigaction(int signum, siginfo_t* info, void* data);
@@ -188,7 +189,7 @@ class signalfd_signal_handler_impl : public signal_handler_base_impl
   {
   public:
     explicit signalfd_signal_handler_impl(
-      boost::asio::io_service& io_service);
+      asio::io_service& io_service);
     virtual ~signalfd_signal_handler_impl();
     
   protected:
@@ -196,7 +197,7 @@ class signalfd_signal_handler_impl : public signal_handler_base_impl
         public signal_handler_base_impl::sigaction_handler
       {
       public:
-        signalfd_sigaction_handler(boost::asio::io_service& io_service);
+        signalfd_sigaction_handler(asio::io_service& io_service);
         virtual ~signalfd_sigaction_handler();
         
       public:
@@ -210,14 +211,14 @@ class signalfd_signal_handler_impl : public signal_handler_base_impl
     
   protected:
     virtual void create_sigaction_handler(
-      boost::asio::io_service& io_service,
+      asio::io_service& io_service,
       std::shared_ptr<sigaction_handler>& handler);
     
   protected:
     virtual void add_sigaction(
-      const sigaction_key& key, boost::system::error_code& ec);
+      const sigaction_key& key, std::error_code& ec);
     virtual void remove_sigaction(
-      const sigaction_key& key, boost::system::error_code& ec);
+      const sigaction_key& key, std::error_code& ec);
   };
 
 }; // namespace apoa

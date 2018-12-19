@@ -98,6 +98,11 @@ endif
 ifneq ($(ASIODIR),/usr)
 dev_CPPFLAGS    += -isystem $(ASIODIR)/include
 build_CPPFLAGS  += -isystem $(ASIODIR)/include
+dev_CPPFLAGS    += -DASIO_ENABLE_OLD_SERVICES
+build_CPPFLAGS  += -DASIO_ENABLE_OLD_SERVICES
+else
+dev_CPPFLAGS    += -DBOOST_ASIO_ENABLE_OLD_SERVICES
+build_CPPFLAGS  += -DBOOST_ASIO_ENABLE_OLD_SERVICES
 endif
 
 
@@ -115,8 +120,6 @@ build_CPPFLAGS  += -isystem $(BOOSTDIR)/include
 dev_LDFLAGS     += -L$(BOOSTLIB)$(arch_LIB) -Wl,-rpath=$(BOOSTLIB)$(arch_LIB)
 build_LDFLAGS   += -L$(BOOSTLIB)$(arch_LIB) -Wl,-rpath=$(BOOSTLIB)$(arch_LIB)
 endif
-dev_CPPFLAGS    += -DBOOST_ASIO_ENABLE_OLD_SERVICES
-build_CPPFLAGS  += -DBOOST_ASIO_ENABLE_OLD_SERVICES
 dev_LIBS        += -lboost_system -lboost_filesystem -lboost_thread -lboost_program_options
 build_LIBS      += -lboost_system -lboost_filesystem -lboost_thread -lboost_program_options
 

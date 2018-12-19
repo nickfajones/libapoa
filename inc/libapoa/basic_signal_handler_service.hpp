@@ -13,9 +13,9 @@
 #define LIBAPOA_BASIC_SIGNAL_HANDLER_SERVICE_HPP
 
 #include <memory>
+#include <system_error>
 
-#include <boost/system/error_code.hpp>
-#include <boost/asio.hpp>
+#include <asio.hpp>
 
 #include <libapoa/common.hpp>
 #include <libapoa/application_handler.hpp>
@@ -28,7 +28,7 @@ namespace apoa
 
 //#############################################################################
 class basic_signal_handler_service :
-  public boost::asio::detail::service_base<basic_signal_handler_service>
+  public asio::detail::service_base<basic_signal_handler_service>
   {
   public:
     typedef std::shared_ptr<signal_handler_base_impl> implementation_type;
@@ -40,12 +40,12 @@ class basic_signal_handler_service :
     
   private:
     typedef boost::function<
-      void (const boost::system::error_code&, struct basic_siginfo)>
+      void (const std::error_code&, struct basic_siginfo)>
         basic_signal_callback;
     
   public:
     explicit basic_signal_handler_service(
-      boost::asio::io_service& io_service);
+      asio::io_service& io_service);
     virtual ~basic_signal_handler_service();
     
   public:
@@ -56,12 +56,12 @@ class basic_signal_handler_service :
   public:
     std::size_t cancel(
       implementation_type& impl,
-      boost::system::error_code& ec);
+      std::error_code& ec);
     
     void handle(
       implementation_type& impl,
       int signum,
-      boost::system::error_code& ec);
+      std::error_code& ec);
     
     template <typename NotificationHandler>
     void async_wait(

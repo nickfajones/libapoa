@@ -11,10 +11,12 @@
 
 #include <string>
 #include <memory>
+#include <system_error>
 
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
-#include <boost/asio.hpp>
+
+#include <asio.hpp>
 
 #include <libapoa/common.hpp>
 #include <libapoa/application_handler.hpp>
@@ -26,7 +28,7 @@
 class mythread : public std::enable_shared_from_this<mythread>
   {
   public:
-    explicit mythread(boost::asio::io_service& io_service) :
+    explicit mythread(asio::io_service& io_service) :
       m_tenum(apoa::get_tenum()),
       timer_(io_service)
       //sigusr1_handler_(io_service)
@@ -60,20 +62,20 @@ class mythread : public std::enable_shared_from_this<mythread>
       timer_.async_wait(
         boost::bind(
           &mythread::on_timeout, shared_from_this(),
-          boost::asio::placeholders::error));
+          asio::placeholders::error));
 /*
       sigusr1_handler_.handle(SIGUSR1);
       sigusr1_handler_.async_wait(
         boost::bind(
           &mythread::on_sigusr1, shared_from_this(),
-          boost::asio::placeholders::error,
+          asio::placeholders::error,
           _2));
 */
       }
 
   public:
     void on_timeout(
-        const boost::system::error_code& ec)
+        const std::error_code& ec)
       {
       if (ec)
         {
@@ -87,13 +89,13 @@ class mythread : public std::enable_shared_from_this<mythread>
       timer_.async_wait(
         boost::bind(
           &mythread::on_timeout, shared_from_this(),
-          boost::asio::placeholders::error));
+          asio::placeholders::error));
       }
 
   public:
 /*
     void on_sigusr1(
-        const boost::system::error_code& ec, apoa::siginfo sigusr1_info)
+        const std::error_code& ec, apoa::siginfo sigusr1_info)
       {
       APOA_PRINT("mythread::on_sigusr1");
 
@@ -108,7 +110,7 @@ class mythread : public std::enable_shared_from_this<mythread>
 */
   private:
     apoa::tenum_t m_tenum;
-    boost::asio::deadline_timer timer_;
+    asio::deadline_timer timer_;
 
     //apoa::signal_handler sigusr1_handler_;
   };
@@ -119,7 +121,7 @@ class mythread : public std::enable_shared_from_this<mythread>
 class myapp : public std::enable_shared_from_this<myapp>
   {
   public:
-    explicit myapp(boost::asio::io_service& io_service) :
+    explicit myapp(asio::io_service& io_service) :
       io_service_(io_service),
       timer_(io_service),
       thread_handler_(io_service),
@@ -141,8 +143,8 @@ class myapp : public std::enable_shared_from_this<myapp>
 
   public:
     static void process_start(
-        const boost::system::error_code& ec,
-        boost::asio::io_service& io_service)
+        const std::error_code& ec,
+        asio::io_service& io_service)
       {
       assert(!ec);
 
@@ -158,21 +160,21 @@ class myapp : public std::enable_shared_from_this<myapp>
       sigint_handler_.async_wait(
         boost::bind(
           &myapp::on_sigint, shared_from_this(),
-          boost::asio::placeholders::error,
+          asio::placeholders::error,
           _2));
 
       sigusr1_handler_.handle(SIGUSR1);
       sigusr1_handler_.async_wait(
         boost::bind(
           &myapp::on_sigusr1, shared_from_this(),
-          boost::asio::placeholders::error,
+          asio::placeholders::error,
           _2));
 
       sigusr2_handler_.handle(SIGUSR2);
       sigusr2_handler_.async_wait(
         boost::bind(
           &myapp::on_sigusr2, shared_from_this(),
-          boost::asio::placeholders::error,
+          asio::placeholders::error,
           _2));
 
       timer_.expires_from_now(
@@ -180,7 +182,7 @@ class myapp : public std::enable_shared_from_this<myapp>
       timer_.async_wait(
         boost::bind(
           &myapp::on_timeout, shared_from_this(),
-          boost::asio::placeholders::error));
+          asio::placeholders::error));
       }
 
   public:
@@ -190,8 +192,8 @@ class myapp : public std::enable_shared_from_this<myapp>
       }
 
     void on_thread_start(
-        const boost::system::error_code& ec,
-        boost::asio::io_service& io_service)
+        const std::error_code& ec,
+        asio::io_service& io_service)
       {
       assert(!ec);
 
@@ -203,7 +205,7 @@ class myapp : public std::enable_shared_from_this<myapp>
       }
 
   public:
-    void on_timeout(const boost::system::error_code& ec)
+    void on_timeout(const std::error_code& ec)
       {
       if (ec)
         {
@@ -223,7 +225,7 @@ class myapp : public std::enable_shared_from_this<myapp>
         thread_handler_.create_thread(
           boost::bind(
             &myapp::on_thread_start, shared_from_this(),
-            boost::asio::placeholders::error, _2));
+            asio::placeholders::error, _2));
         }
 
       timer_.expires_from_now(
@@ -231,7 +233,7 @@ class myapp : public std::enable_shared_from_this<myapp>
       timer_.async_wait(
         boost::bind(
           &myapp::on_timeout, shared_from_this(),
-          boost::asio::placeholders::error));
+          asio::placeholders::error));
       }
 
   public:
@@ -241,7 +243,7 @@ class myapp : public std::enable_shared_from_this<myapp>
       }
 
     void on_sigusr1(
-        const boost::system::error_code& ec, apoa::siginfo sigusr1_info)
+        const std::error_code& ec, apoa::siginfo sigusr1_info)
       {
       APOA_PRINT("myapp::on_sigusr1");
 
@@ -257,7 +259,7 @@ class myapp : public std::enable_shared_from_this<myapp>
       }
 
     void on_sigusr2(
-        const boost::system::error_code& ec, apoa::siginfo sigusr1_info)
+        const std::error_code& ec, apoa::siginfo sigusr1_info)
       {
       APOA_PRINT("myapp::on_sigusr2");
 
@@ -273,7 +275,7 @@ class myapp : public std::enable_shared_from_this<myapp>
       }
 
     void on_sigint(
-        const boost::system::error_code& ec, apoa::siginfo sigint_info)
+        const std::error_code& ec, apoa::siginfo sigint_info)
       {
       APOA_PRINT("myapp::on_sigint");
 
@@ -296,9 +298,9 @@ class myapp : public std::enable_shared_from_this<myapp>
       }
 
   private:
-    boost::asio::io_service& io_service_;
+    asio::io_service& io_service_;
 
-    boost::asio::deadline_timer timer_;
+    asio::deadline_timer timer_;
 
     apoa::thread_handler thread_handler_;
 
@@ -319,7 +321,7 @@ int main(int argc, char** argv)
   desc.add_options()
     ("help", "");
 
-  boost::asio::io_service io_service;
+  asio::io_service io_service;
   apoa::application_handler app_handler(io_service);
 
   app_handler.process_init(desc, argc, argv);

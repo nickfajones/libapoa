@@ -20,7 +20,7 @@ namespace apoa
 
 //#############################################################################
 class basic_application_handler_service :
-    public boost::asio::detail::service_base<basic_application_handler_service>
+    public asio::detail::service_base<basic_application_handler_service>
   {
   public:
     typedef std::shared_ptr<apoa::application_handler_impl>
@@ -28,8 +28,8 @@ class basic_application_handler_service :
 
   public:
     explicit basic_application_handler_service(
-        boost::asio::io_service& io_service) :
-      boost::asio::detail::service_base<
+        asio::io_service& io_service) :
+      asio::detail::service_base<
         basic_application_handler_service>(io_service),
       io_service_(io_service)
       {
@@ -83,7 +83,7 @@ class basic_application_handler_service :
       }
 
   private:
-    boost::asio::io_service& io_service_;
+    asio::io_service& io_service_;
   };
 
 }; // namespace apoa

@@ -17,11 +17,11 @@
 
 #include <map>
 
-#include <boost/asio.hpp>
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
-#include <boost/system/error_code.hpp>
 #include <boost/thread.hpp>
+
+#include <asio.hpp>
 
 #include <libapoa/common.hpp>
 
@@ -40,16 +40,16 @@ class thread_handler_impl
     ~thread_handler_impl();
 
   public:
-    void register_main_thread(boost::asio::io_service& process_io_service);
+    void register_main_thread(asio::io_service& process_io_service);
     void start_main_thread(pid_t pid, thread_callback handler);
 
     void create_thread(
-      boost::asio::io_service& parent_io_service,
+      asio::io_service& parent_io_service,
       thread_callback handler);
 
     void shutdown_thread(pid_t tid, int retval);
     
-    boost::asio::io_service& get_io_service(pid_t tid);
+    asio::io_service& get_io_service(pid_t tid);
 
   private:
     void insert_thread(

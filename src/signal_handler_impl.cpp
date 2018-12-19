@@ -21,13 +21,14 @@
 #include <set>
 #include <map>
 #include <memory>
+#include <system_error>
 
 #include <boost/noncopyable.hpp>
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
 #include <boost/thread.hpp>
-#include <boost/system/error_code.hpp>
-#include <boost/asio.hpp>
+
+#include <asio.hpp>
 
 #include "application_handler.hpp"
 #include "basic_signal_handler_siginfo.hpp"
@@ -83,7 +84,7 @@ bool signal_handler_base_impl::sigaction_key::operator<(
 
 //#############################################################################
 signal_handler_base_impl::sigaction_handler::sigaction_handler(
-    boost::asio::io_service& io_service) :
+    asio::io_service& io_service) :
   signal_descriptor_(io_service),
   buffer_end_(0)
   {
@@ -109,17 +110,17 @@ void signal_handler_base_impl::sigaction_handler::init()
   
   signal_descriptor_.assign(descriptor);
   signal_descriptor_.async_read_some(
-    boost::asio::buffer(signal_descriptor_buffer_),
+    asio::buffer(signal_descriptor_buffer_),
     boost::bind(
       &signal_handler_base_impl::sigaction_handler::on_descriptor_read,
       shared_from_this(),
-      boost::asio::placeholders::error,
-      boost::asio::placeholders::bytes_transferred));
+      asio::placeholders::error,
+      asio::placeholders::bytes_transferred));
   }
 
 //#############################################################################
 void signal_handler_base_impl::sigaction_handler::on_descriptor_read(
-    const boost::system::error_code& ec, std::size_t bytes_transferred)
+    const std::error_code& ec, std::size_t bytes_transferred)
   {
   if (ec)
     {
@@ -171,7 +172,7 @@ void signal_handler_base_impl::sigaction_handler::on_descriptor_read(
         }
       }
       
-      boost::system::error_code ec2;
+      std::error_code ec2;
       
       request->io_service_.post(
         boost::bind(request->callback_, ec2, *bsi));
@@ -190,14 +191,14 @@ void signal_handler_base_impl::sigaction_handler::on_descriptor_read(
     }
 
   signal_descriptor_.async_read_some(
-    boost::asio::buffer(
+    asio::buffer(
       reinterpret_cast<char*>(signal_descriptor_buffer_) + buffer_end_,
       (sizeof(struct basic_siginfo) * 64) - buffer_end_),
     boost::bind(
       &signal_handler_base_impl::sigaction_handler::on_descriptor_read,
       shared_from_this(),
-      boost::asio::placeholders::error,
-      boost::asio::placeholders::bytes_transferred));
+      asio::placeholders::error,
+      asio::placeholders::bytes_transferred));
   
   unblock_signals();
   }
@@ -206,7 +207,7 @@ void signal_handler_base_impl::sigaction_handler::on_descriptor_read(
 
 //#############################################################################
 signal_handler_base_impl::signal_handler_base_impl(
-    boost::asio::io_service& io_service) :
+    asio::io_service& io_service) :
   signum_(0),
   io_service_(io_service),
   active_(false)
@@ -228,7 +229,7 @@ void signal_handler_base_impl::deactivate()
   }
 
 //#############################################################################
-std::size_t signal_handler_base_impl::cancel(boost::system::error_code& ec)
+std::size_t signal_handler_base_impl::cancel(std::error_code& ec)
   {
   if (is_process_thread())
     {
@@ -247,7 +248,7 @@ std::size_t signal_handler_base_impl::cancel(boost::system::error_code& ec)
     return 0;
     }
   
-  boost::system::error_code ec2 = boost::asio::error::operation_aborted;
+  std::error_code ec2 = asio::error::operation_aborted;
   struct basic_siginfo bsi;
   
   io_service_.post(boost::bind(callback_, ec2, bsi));
@@ -261,12 +262,12 @@ std::size_t signal_handler_base_impl::cancel(boost::system::error_code& ec)
 //#############################################################################
 void signal_handler_base_impl::handle(int signum)
   {
-  boost::system::error_code ec;
+  std::error_code ec;
   handle(signum, ec);
   }
 
 void signal_handler_base_impl::handle(
-    int signum, boost::system::error_code& ec)
+    int signum, std::error_code& ec)
   {
   signum_ = signum;
   
@@ -323,12 +324,12 @@ void signal_handler_base_impl::async_wait(basic_signal_callback callback)
 //#############################################################################
 void signal_handler_base_impl::async_unhandle()
   {
-  boost::system::error_code ec;
+  std::error_code ec;
   unhandle(ec);
   }
 
 void signal_handler_base_impl::unhandle(
-    boost::system::error_code& ec)
+    std::error_code& ec)
   {
   boost::unique_lock<boost::mutex> signal_lock(_signal_mutex);
 
@@ -372,7 +373,7 @@ sigset_t _posix_process_blockset;
 
 //#############################################################################
 posix_signal_handler_impl::posix_sigaction_handler::posix_sigaction_handler(
-    boost::asio::io_service& io_service) :
+    asio::io_service& io_service) :
   signal_handler_base_impl::sigaction_handler(io_service)
   {
   sigprocmask(0, NULL, &_posix_process_blockset);
@@ -439,7 +440,7 @@ void posix_signal_handler_impl::posix_sigaction_handler::unblock_signals()
 
 //#############################################################################
 posix_signal_handler_impl::posix_signal_handler_impl(
-    boost::asio::io_service& io_service) :
+    asio::io_service& io_service) :
   signal_handler_base_impl(io_service)
   {
   }
@@ -450,7 +451,7 @@ posix_signal_handler_impl::~posix_signal_handler_impl()
 
 //#############################################################################
 void posix_signal_handler_impl::create_sigaction_handler(
-    boost::asio::io_service& io_service,
+    asio::io_service& io_service,
     std::shared_ptr<sigaction_handler>& handler)
   {
   handler.reset(new posix_sigaction_handler(io_service));
@@ -458,7 +459,7 @@ void posix_signal_handler_impl::create_sigaction_handler(
 
 //#############################################################################
 void posix_signal_handler_impl::add_sigaction(
-    const sigaction_key& key, boost::system::error_code& ec)
+    const sigaction_key& key, std::error_code& ec)
   {
   struct sigaction sa;
   memset(&sa, 0, sizeof(sa));
@@ -469,12 +470,12 @@ void posix_signal_handler_impl::add_sigaction(
   
   if (sigaction(key.signum_, &sa, &key.old_sa_))
     {
-    ec.assign(errno, boost::system::system_category());
+    ec.assign(errno, std::system_category());
     }
   }
 
 void posix_signal_handler_impl::remove_sigaction(
-    const sigaction_key& key, boost::system::error_code& ec)
+    const sigaction_key& key, std::error_code& ec)
   {
   sigaction(key.signum_, &key.old_sa_, NULL);
   }
@@ -535,7 +536,7 @@ sigset_t _signalfd_process_sigset;
 
 //#############################################################################
 signalfd_signal_handler_impl::signalfd_sigaction_handler::signalfd_sigaction_handler(
-    boost::asio::io_service& io_service) :
+    asio::io_service& io_service) :
   signal_handler_base_impl::sigaction_handler(io_service)
   {
   pthread_sigmask(SIG_SETMASK, NULL, &_signalfd_process_sigset);
@@ -578,7 +579,7 @@ void signalfd_signal_handler_impl::signalfd_sigaction_handler::unblock_signals()
 
 //#############################################################################
 signalfd_signal_handler_impl::signalfd_signal_handler_impl(
-    boost::asio::io_service& io_service) :
+    asio::io_service& io_service) :
   signal_handler_base_impl(io_service)
   {
   }
@@ -589,7 +590,7 @@ signalfd_signal_handler_impl::~signalfd_signal_handler_impl()
 
 //#############################################################################
 void signalfd_signal_handler_impl::create_sigaction_handler(
-    boost::asio::io_service& io_service,
+    asio::io_service& io_service,
     std::shared_ptr<sigaction_handler>& handler)
   {
   handler.reset(new signalfd_sigaction_handler(io_service));
@@ -597,25 +598,25 @@ void signalfd_signal_handler_impl::create_sigaction_handler(
 
 //#############################################################################
 void signalfd_signal_handler_impl::add_sigaction(
-    const sigaction_key& key, boost::system::error_code& ec)
+    const sigaction_key& key, std::error_code& ec)
   {
   sigaddset(&_signalfd_process_sigset, key.signum_);
   
   if (pthread_sigmask(SIG_SETMASK, &_signalfd_process_sigset, NULL))
     {
-    ec.assign(errno, boost::system::system_category());
+    ec.assign(errno, std::system_category());
     
     return;
     }
   
   if (signalfd(_signalfd_fd, &_signalfd_process_sigset, 0) == -1)
     {
-    ec.assign(errno, boost::system::system_category());
+    ec.assign(errno, std::system_category());
     }
   }
 
 void signalfd_signal_handler_impl::remove_sigaction(
-    const sigaction_key& key, boost::system::error_code& ec)
+    const sigaction_key& key, std::error_code& ec)
   {
   sigdelset(&_signalfd_process_sigset, key.signum_);
   

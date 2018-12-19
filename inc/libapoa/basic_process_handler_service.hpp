@@ -14,9 +14,9 @@
 #define LIBAPOA_BASIC_PROCESS_HANDLER_SERVICE_HPP
 
 #include <memory>
+#include <system_error>
 
-#include <boost/system/error_code.hpp>
-#include <boost/asio.hpp>
+#include <asio.hpp>
 
 #include <libapoa/basic_process_context.hpp>
 #include <libapoa/process_handler_impl.hpp>
@@ -27,14 +27,14 @@ namespace apoa
 
 //#############################################################################
 class basic_process_handler_service :
-    public boost::asio::detail::service_base<basic_process_handler_service>
+    public asio::detail::service_base<basic_process_handler_service>
   {
   public:
     typedef std::shared_ptr<process_handler_impl> implementation_type;
     
   public:
     explicit basic_process_handler_service(
-        boost::asio::io_service& io_service);
+        asio::io_service& io_service);
     virtual ~basic_process_handler_service();
     
   public:
@@ -44,20 +44,20 @@ class basic_process_handler_service :
     
   public:
     void cancel(
-      implementation_type& impl, boost::system::error_code& ec);
+      implementation_type& impl, std::error_code& ec);
     
     void launch(
       implementation_type& impl,
-      basic_process_context& context, boost::system::error_code& ec);
+      basic_process_context& context, std::error_code& ec);
     
     void exec(
       implementation_type& impl,
-      basic_process_context& context, boost::system::error_code& ec);
+      basic_process_context& context, std::error_code& ec);
 
     void signal(
       implementation_type& impl,
       basic_process_context::signal_type signal_code,
-      boost::system::error_code& ec);
+      std::error_code& ec);
 
   public:
     template <typename Handler>

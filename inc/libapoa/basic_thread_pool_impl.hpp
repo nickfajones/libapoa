@@ -13,9 +13,13 @@
 #ifndef LIBAPOA_BASIC_THREAD_POOL_IMPL_HPP
 #define LIBAPOA_BASIC_THREAD_POOL_IMPL_HPP
 
+#include <system_error>
+
 #include <libapoa/thread_handler.hpp>
 
 #include <boost/thread.hpp>
+
+#include <asio.hpp>
 
 
 namespace apoa
@@ -26,22 +30,22 @@ class basic_thread_pool_impl :
     public std::enable_shared_from_this<basic_thread_pool_impl>
   {
   private:
-    typedef std::map<pid_t, boost::asio::io_service&> threads_map;
+    typedef std::map<pid_t, asio::io_service&> threads_map;
 
   public:
-    explicit basic_thread_pool_impl(boost::asio::io_service& io_service);
+    explicit basic_thread_pool_impl(asio::io_service& io_service);
     ~basic_thread_pool_impl();
 
   public:
-    void create_pool(uint32_t size, boost::system::error_code& ec);
+    void create_pool(uint32_t size, std::error_code& ec);
     void destroy_pool();
-    boost::asio::io_service& get_thread_service(
-      boost::system::error_code& ec);
+    asio::io_service& get_thread_service(
+      std::error_code& ec);
 
   private:
     void on_thread_created(
-      const boost::system::error_code& ec,
-      boost::asio::io_service& io_service);
+      const std::error_code& ec,
+      asio::io_service& io_service);
 
   private:
     thread_handler thread_handler_;

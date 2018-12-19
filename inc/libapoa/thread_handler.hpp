@@ -12,6 +12,8 @@
 #ifndef LIBAPOA_THREAD_HANDLER_HPP
 #define LIBAPOA_THREAD_HANDLER_HPP
 
+#include <asio.hpp>
+
 #include <libapoa/common.hpp>
 #include <libapoa/thread_handler_types.hpp>
 
@@ -49,8 +51,8 @@ class thread_handler
         boost::thread* system_thread_;
 
       public:
-        boost::asio::io_service* thread_io_service_;
-        boost::asio::io_service::work* thread_work_;
+        asio::io_service* thread_io_service_;
+        asio::io_service::work* thread_work_;
 
       public:
         bool is_process_;
@@ -59,7 +61,7 @@ class thread_handler
       };
 
   public:
-    explicit thread_handler(boost::asio::io_service& io_service);
+    explicit thread_handler(asio::io_service& io_service);
     ~thread_handler();
 
   public:
@@ -79,9 +81,9 @@ class thread_handler
     static void join_thread(apoa::tenum_t tenum);
 
   public:
-    static boost::asio::io_service& get_io_service_tid(
+    static asio::io_service& get_io_service_tid(
       pid_t tid = get_tid());
-    static boost::asio::io_service& get_io_service(
+    static asio::io_service& get_io_service(
       tenum_t tenum = get_tenum());
 
   private:
@@ -92,7 +94,7 @@ class thread_handler
     static std::map<pid_t, tenum_t> tid_tenum_map_;
 
   private:
-    boost::asio::io_service& io_service_;
+    asio::io_service& io_service_;
   };
 
 }; // namespace apoa

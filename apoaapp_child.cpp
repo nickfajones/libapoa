@@ -10,10 +10,12 @@
 
 #include <string>
 #include <memory>
+#include <system_error>
 
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
-#include <boost/asio.hpp>
+
+#include <asio.hpp>
 
 #include <libapoa/common.hpp>
 #include <libapoa/application_handler.hpp>
@@ -25,7 +27,7 @@
 class myapp : public std::enable_shared_from_this<myapp>
   {
   public:
-    explicit myapp(boost::asio::io_service& io_service) :
+    explicit myapp(asio::io_service& io_service) :
       io_service_(io_service),
       sigint_handler_(io_service),
       process_handler_(io_service),
@@ -43,8 +45,8 @@ class myapp : public std::enable_shared_from_this<myapp>
 
   public:
     static void process_start(
-        const boost::system::error_code& ec,
-        boost::asio::io_service& io_service)
+        const std::error_code& ec,
+        asio::io_service& io_service)
       {
       assert(!ec);
 
@@ -60,7 +62,7 @@ class myapp : public std::enable_shared_from_this<myapp>
       sigint_handler_.async_wait(
         boost::bind(
           &myapp::on_sigint, shared_from_this(),
-          boost::asio::placeholders::error,
+          asio::placeholders::error,
           _2));
 
       timer_.expires_from_now(
@@ -68,15 +70,15 @@ class myapp : public std::enable_shared_from_this<myapp>
       timer_.async_wait(
         boost::bind(
           &myapp::on_timeout, shared_from_this(),
-          boost::asio::placeholders::error));
+          asio::placeholders::error));
       }
 
   public:
-    void on_timeout(const boost::system::error_code& ec)
+    void on_timeout(const std::error_code& ec)
       {
       if (ec)
         {
-        if (ec != boost::asio::error::operation_aborted)
+        if (ec != asio::error::operation_aborted)
           {
           APOA_PRINT("myapp::on_timeout error %s", ec.message().data());
           }
@@ -89,7 +91,7 @@ class myapp : public std::enable_shared_from_this<myapp>
       apoa::process_context context;
       context.exectuable_file_path("/usr/bin/env");
 
-      boost::system::error_code ec2;
+      std::error_code ec2;
       process_handler_.launch(context, ec2);
       if (ec)
         {
@@ -101,24 +103,24 @@ class myapp : public std::enable_shared_from_this<myapp>
       process_handler_.async_wait_exit(
         boost::bind(
           &myapp::on_child_exit, shared_from_this(),
-          boost::asio::placeholders::error,
+          asio::placeholders::error,
           _2));
 
       process_handler_.async_pipe_read(
-        boost::asio::buffer(buffer_.data(), buffer_.size() - 1),
+        asio::buffer(buffer_.data(), buffer_.size() - 1),
         boost::bind(
           &myapp::on_child_read, shared_from_this(),
-          boost::asio::placeholders::error,
+          asio::placeholders::error,
           _2));
       }
 
   public:
     void on_child_read(
-        const boost::system::error_code& ec, std::size_t readed)
+        const std::error_code& ec, std::size_t readed)
       {
       if (ec)
         {
-        if (ec != boost::asio::error::operation_aborted)
+        if (ec != asio::error::operation_aborted)
           {
           APOA_PRINT("myapp::on_child_read error %s", ec.message().data());
           }
@@ -131,21 +133,21 @@ class myapp : public std::enable_shared_from_this<myapp>
       APOA_PRINT("%s", buffer_.data());
 
       process_handler_.async_pipe_read(
-        boost::asio::buffer(buffer_.data(), buffer_.size() - 1),
+        asio::buffer(buffer_.data(), buffer_.size() - 1),
         boost::bind(
           &myapp::on_child_read, shared_from_this(),
-          boost::asio::placeholders::error,
+          asio::placeholders::error,
           _2));
       }
 
   public:
     void on_child_exit(
-        const boost::system::error_code& ec,
+        const std::error_code& ec,
         apoa::basic_process_context::status_type)
       {
       if (ec)
         {
-        if (ec != boost::asio::error::operation_aborted)
+        if (ec != asio::error::operation_aborted)
           {
           APOA_PRINT("myapp::on_child_exit error %s", ec.message().data());
           }
@@ -160,13 +162,13 @@ class myapp : public std::enable_shared_from_this<myapp>
 
   public:
     void on_sigint(
-        const boost::system::error_code& ec, apoa::siginfo sigint_info)
+        const std::error_code& ec, apoa::siginfo sigint_info)
       {
       APOA_PRINT("myapp::on_sigint");
 
       if (ec)
         {
-        if (ec != boost::asio::error::operation_aborted)
+        if (ec != asio::error::operation_aborted)
           {
           APOA_PRINT("myapp::on_sigint error %s", ec.message().data());
           }
@@ -179,13 +181,13 @@ class myapp : public std::enable_shared_from_this<myapp>
       }
 
   private:
-    boost::asio::io_service& io_service_;
+    asio::io_service& io_service_;
 
     apoa::signal_handler sigint_handler_;
 
     apoa::process_handler process_handler_;
 
-    boost::asio::deadline_timer timer_;
+    asio::deadline_timer timer_;
 
     std::array<char, 1025> buffer_;
   };
@@ -197,7 +199,7 @@ int main(int argc, char** argv)
   desc.add_options()
     ("help", "");
 
-  boost::asio::io_service io_service;
+  asio::io_service io_service;
   apoa::application_handler app_handler(io_service);
 
   app_handler.process_init(desc, argc, argv);

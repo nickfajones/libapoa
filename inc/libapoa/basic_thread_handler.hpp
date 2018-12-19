@@ -15,19 +15,21 @@
 #include <libapoa/common.hpp>
 #include <libapoa/basic_thread_handler_service.hpp>
 
+#include <asio.hpp>
+
 
 namespace apoa
 {
 
 //#############################################################################
 class basic_thread_handler :
-    public boost::asio::basic_io_object<basic_thread_handler_service>
+    public asio::basic_io_object<basic_thread_handler_service>
   {
   public:
     friend class application_handler_impl;
 
   public:
-    explicit basic_thread_handler(boost::asio::io_service& io_service);
+    explicit basic_thread_handler(asio::io_service& io_service);
     ~basic_thread_handler();
     
   public:
@@ -35,7 +37,7 @@ class basic_thread_handler :
     void shutdown_thread(pid_t tid, int retval);
 
   private:
-    void register_main_thread(boost::asio::io_service& process_io_service);
+    void register_main_thread(asio::io_service& process_io_service);
     void start_main_thread(pid_t pid, thread_callback cb);
   };
 

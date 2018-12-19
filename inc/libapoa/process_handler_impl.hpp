@@ -13,7 +13,11 @@
 #ifndef LIBAPOA_PROCESS_HANDLER_IMPL_HPP
 #define LIBAPOA_PROCESS_HANDLER_IMPL_HPP
 
+#include <system_error>
+
 #include <libapoa/signal_handler.hpp>
+
+#include <asio.hpp>
 
 
 namespace apoa
@@ -25,30 +29,30 @@ class process_handler_impl :
   {
   public:
     typedef boost::function<
-        void (const boost::system::error_code&,
+        void (const std::error_code&,
               apoa::basic_process_context::status_type)>
       basic_process_exit_callback;
     typedef boost::function<
-        void (const boost::system::error_code&, std::size_t)>
+        void (const std::error_code&, std::size_t)>
       async_pipe_read_callback;
     typedef boost::function<
-        void (const boost::system::error_code&, std::size_t)>
+        void (const std::error_code&, std::size_t)>
       async_pipe_write_callback;
     
   public:
-    explicit process_handler_impl(boost::asio::io_service& io_service);
+    explicit process_handler_impl(asio::io_service& io_service);
     ~process_handler_impl();
     
   public:
     void launch(
-      basic_process_context& context, boost::system::error_code& ec);
+      basic_process_context& context, std::error_code& ec);
     void exec(
-      basic_process_context& context, boost::system::error_code& ec);
+      basic_process_context& context, std::error_code& ec);
     
-    void cancel(boost::system::error_code& ec);
+    void cancel(std::error_code& ec);
     void signal(
       basic_process_context::signal_type signal_code,
-      boost::system::error_code& ec);
+      std::error_code& ec);
     
     void async_wait_exit(basic_process_exit_callback callback);
     
@@ -67,8 +71,8 @@ class process_handler_impl :
         boost::bind(
           &process_handler_impl::async_pipe_read_handle,
             shared_from_this(),
-            boost::asio::placeholders::error,
-            boost::asio::placeholders::bytes_transferred,
+            asio::placeholders::error,
+            asio::placeholders::bytes_transferred,
             handler));
       }
     
@@ -87,8 +91,8 @@ class process_handler_impl :
           boost::bind(
             &process_handler_impl::async_pipe_write_handle,
               shared_from_this(),
-              boost::asio::placeholders::error,
-              boost::asio::placeholders::bytes_transferred,
+              asio::placeholders::error,
+              asio::placeholders::bytes_transferred,
               handler));
       }
     
@@ -100,27 +104,27 @@ class process_handler_impl :
     
   private:
     bool is_file_executable(const std::string& file,
-      boost::system::error_code& ec);
+      std::error_code& ec);
     
     void create_pipe(int pipe_one[], int pipe_two[],
-      boost::system::error_code& ec);
+      std::error_code& ec);
     void exec_in_child(int pipe_one[], int pipe_two[]);
     
     void async_pipe_read_handle(
-      const boost::system::error_code& ec, std::size_t bytes_transferred,
+      const std::error_code& ec, std::size_t bytes_transferred,
       async_pipe_read_callback handler);
     void async_pipe_write_handle(
-      const boost::system::error_code& ec, std::size_t bytes_transferred,
+      const std::error_code& ec, std::size_t bytes_transferred,
       async_pipe_write_callback handler);
     
-    void sigchld_handle(const boost::system::error_code& ec,
+    void sigchld_handle(const std::error_code& ec,
       apoa::siginfo sigint_info);
     
   private:
-    boost::asio::io_service& io_service_;
+    asio::io_service& io_service_;
     
-    boost::asio::posix::stream_descriptor read_descriptor_;
-    boost::asio::posix::stream_descriptor write_descriptor_;
+    asio::posix::stream_descriptor read_descriptor_;
+    asio::posix::stream_descriptor write_descriptor_;
     
     signal_handler sigchld_handler_;
     

@@ -16,9 +16,9 @@
 #include <string>
 #include <list>
 #include <map>
+#include <system_error>
 
-#include <boost/system/error_code.hpp>
-#include <boost/asio.hpp>
+#include <asio.hpp>
 
 
 namespace apoa
@@ -27,11 +27,11 @@ namespace apoa
 //#############################################################################
 template <typename ProcessService>
 class basic_process_handler :
-    public boost::asio::basic_io_object<ProcessService>
+    public asio::basic_io_object<ProcessService>
   {
   public:
-    explicit basic_process_handler(boost::asio::io_service& io_service) :
-      boost::asio::basic_io_object<ProcessService>(io_service)
+    explicit basic_process_handler(asio::io_service& io_service) :
+      asio::basic_io_object<ProcessService>(io_service)
       {
       }
 
@@ -42,12 +42,12 @@ class basic_process_handler :
   public:
     void cancel()
       {
-      boost::system::error_code ec;
+      std::error_code ec;
       cancel(ec);
-      boost::asio::detail::throw_error(ec);
+      asio::detail::throw_error(ec);
       }
 
-    void cancel(boost::system::error_code& ec)
+    void cancel(std::error_code& ec)
       {
       this->get_service().cancel(this->get_implementation(), ec);
       }
@@ -55,31 +55,31 @@ class basic_process_handler :
   public:
     void launch(basic_process_context& context)
       {
-      boost::system::error_code ec;
+      std::error_code ec;
       launch(context, ec);
-      boost::asio::detail::throw_error(ec);
+      asio::detail::throw_error(ec);
       }
 
-    void launch(basic_process_context& context, boost::system::error_code& ec)
+    void launch(basic_process_context& context, std::error_code& ec)
       {
       this->get_service().launch(this->get_implementation(), context, ec);
       }
 
-    void exec(basic_process_context& context, boost::system::error_code& ec)
+    void exec(basic_process_context& context, std::error_code& ec)
       {
       this->get_service().exec(this->get_implementation(), context, ec);
       }
 
     void signal(basic_process_context::signal_type signal_code)
       {
-      boost::system::error_code ec;
+      std::error_code ec;
       this->signal(signal_code, ec);
-      boost::asio::detail::throw_error(ec);
+      asio::detail::throw_error(ec);
       }
 
     void signal(
         basic_process_context::signal_type signal_code,
-        boost::system::error_code& ec)
+        std::error_code& ec)
       {
       this->get_service().signal(this->get_implementation(), signal_code, ec);
       }

@@ -14,6 +14,9 @@
 #include <unistd.h>
 #include <fcntl.h>
 
+#include <system_error>
+
+#include <boost/system/error_code.hpp>
 #include <boost/filesystem.hpp>
 
 #include "basic_process_context.hpp"
@@ -25,7 +28,7 @@ namespace apoa
 
 //#############################################################################
 process_handler_impl::process_handler_impl(
-    boost::asio::io_service& io_service) :
+    asio::io_service& io_service) :
   io_service_(io_service),
   read_descriptor_(io_service),
   write_descriptor_(io_service),
@@ -39,17 +42,17 @@ process_handler_impl::process_handler_impl(
 
 process_handler_impl::~process_handler_impl()
   {
-  boost::system::error_code ec;
+  std::error_code ec;
   cancel(ec);
   if (ec)
     {
-    boost::asio::detail::throw_error(ec, "~process_handler_impl");
+    asio::detail::throw_error(ec, "~process_handler_impl");
     }
   }
 
 //#############################################################################
 void process_handler_impl::launch(
-    basic_process_context& context, boost::system::error_code& ec)
+    basic_process_context& context, std::error_code& ec)
   {
   int pipe_one[2] = {-1, -1};
   int pipe_two[2] = {-1, -1};
@@ -65,7 +68,7 @@ void process_handler_impl::launch(
       {
       if (!ec)
         {
-        ec.assign(ENOTSUP, boost::system::system_category());
+        ec.assign(ENOTSUP, std::system_category());
         }
 
       break;
@@ -75,7 +78,7 @@ void process_handler_impl::launch(
     sigchld_handler_.handle(SIGCHLD);
     sigchld_handler_.async_wait(boost::bind(
       &process_handler_impl::sigchld_handle, shared_from_this(),
-      boost::asio::placeholders::error, _2));
+      asio::placeholders::error, _2));
 
     // Create pipe
     create_pipe(pipe_one, pipe_two, ec);
@@ -85,7 +88,7 @@ void process_handler_impl::launch(
       }
 
     // Do fork
-    io_service_.notify_fork(boost::asio::io_service::fork_prepare);
+    io_service_.notify_fork(asio::io_service::fork_prepare);
     child_pid = fork();
 
     // Child process of fork
@@ -98,12 +101,12 @@ void process_handler_impl::launch(
     // fork fails
     if (child_pid == -1)
       {
-      ec.assign(errno, boost::system::system_category());
+      ec.assign(errno, std::system_category());
       break;
       }
 
     // Parent process
-    io_service_.notify_fork(boost::asio::io_service::fork_parent);
+    io_service_.notify_fork(asio::io_service::fork_parent);
 
     // Assign context with child process id
     context_.handle(child_pid);
@@ -132,13 +135,13 @@ void process_handler_impl::launch(
     // Close child fds
     if (close(child_read_fd) != 0)
       {
-      ec.assign(errno, boost::system::system_category());
+      ec.assign(errno, std::system_category());
       break;
       }
 
     if (close(child_write_fd) != 0)
       {
-      ec.assign(errno, boost::system::system_category());
+      ec.assign(errno, std::system_category());
       break;
       }
 
@@ -146,7 +149,7 @@ void process_handler_impl::launch(
   }
 
 void process_handler_impl::exec(
-    basic_process_context& context, boost::system::error_code& ec)
+    basic_process_context& context, std::error_code& ec)
   {
   // Assign local context
   context_ = context;
@@ -156,7 +159,7 @@ void process_handler_impl::exec(
     {
     if (!ec)
       {
-      ec.assign(ENOTSUP, boost::system::system_category());
+      ec.assign(ENOTSUP, std::system_category());
       }
 
     return;
@@ -168,7 +171,7 @@ void process_handler_impl::exec(
     if (execv(context_.executable_file_path().c_str(),
               context_.get_args_array()) == -1)
       {
-      ec.assign(errno, boost::system::system_category());
+      ec.assign(errno, std::system_category());
     }
     }
   else
@@ -178,13 +181,13 @@ void process_handler_impl::exec(
                context_.get_args_array(),
                context_.get_env_array()) == -1)
       {
-      ec.assign(errno, boost::system::system_category());
+      ec.assign(errno, std::system_category());
       }
     }
   }
 
 //#############################################################################
-void process_handler_impl::cancel(boost::system::error_code& ec)
+void process_handler_impl::cancel(std::error_code& ec)
   {
   if (read_descriptor_.is_open())
     {
@@ -214,12 +217,12 @@ void process_handler_impl::cancel(boost::system::error_code& ec)
 //#############################################################################
 void process_handler_impl::signal(
   basic_process_context::signal_type signal_code,
-  boost::system::error_code& ec)
+  std::error_code& ec)
   {
   // Send signal to child process
   if (kill(context_.handle(), signal_code) != 0)
     {
-    ec.assign(errno, boost::system::system_category());
+    ec.assign(errno, std::system_category());
     }
   }
 
@@ -232,7 +235,7 @@ void process_handler_impl::async_wait_exit(
 
 //#############################################################################
 void process_handler_impl::create_pipe(
-    int pipe_one[], int pipe_two[], boost::system::error_code& ec)
+    int pipe_one[], int pipe_two[], std::error_code& ec)
   {
   int fcntl_flags = -1;
 
@@ -241,14 +244,14 @@ void process_handler_impl::create_pipe(
     // Create pipe1
     if (pipe(pipe_one) != 0)
       {
-      ec.assign(errno, boost::system::system_category());
+      ec.assign(errno, std::system_category());
       break;
       }
 
     // Create pipe2
     if (pipe(pipe_two) != 0)
       {
-      ec.assign(errno, boost::system::system_category());
+      ec.assign(errno, std::system_category());
       break;
       }
 
@@ -332,7 +335,7 @@ void process_handler_impl::exec_in_child(int pipe_one[], int pipe_two[])
 
 //#############################################################################
 void process_handler_impl::async_pipe_read_handle(
-    const boost::system::error_code& ec, std::size_t bytes_transferred,
+    const std::error_code& ec, std::size_t bytes_transferred,
     async_pipe_read_callback handler)
   {
   async_reading_ = false;
@@ -340,7 +343,7 @@ void process_handler_impl::async_pipe_read_handle(
   }
 
 void process_handler_impl::async_pipe_write_handle(
-    const boost::system::error_code& ec, std::size_t bytes_transferred,
+    const std::error_code& ec, std::size_t bytes_transferred,
     async_pipe_write_callback handler)
   {
   async_writing_ = false;
@@ -349,12 +352,12 @@ void process_handler_impl::async_pipe_write_handle(
 
 //#############################################################################
 void process_handler_impl::sigchld_handle(
-    const boost::system::error_code& ec, apoa::siginfo sigint_info)
+    const std::error_code& ec, apoa::siginfo sigint_info)
   {
   // Verify error
   if (ec)
     {
-    if (ec == boost::asio::error::operation_aborted)
+    if (ec == asio::error::operation_aborted)
       {
       return;
       }
@@ -371,7 +374,7 @@ void process_handler_impl::sigchld_handle(
     }
 
   int status = 0;
-  boost::system::error_code new_ec;
+  std::error_code new_ec;
 
   // Wait
   pid_t who_died = waitpid(context_.handle(), &status, WNOHANG);
@@ -379,7 +382,7 @@ void process_handler_impl::sigchld_handle(
   // waitpid has error
   if (who_died == -1)
     {
-    new_ec.assign(errno, boost::system::system_category());
+    new_ec.assign(errno, std::system_category());
     }
 
   // Dead child process does not belong to current thread
@@ -388,7 +391,7 @@ void process_handler_impl::sigchld_handle(
     sigchld_handler_.handle(SIGCHLD);
     sigchld_handler_.async_wait(boost::bind(
       &process_handler_impl::sigchld_handle, shared_from_this(),
-      boost::asio::placeholders::error, _2));
+      asio::placeholders::error, _2));
 
     return;
     }
@@ -409,13 +412,13 @@ void process_handler_impl::sigchld_handle(
     io_service_.post(
       boost::bind(
         wait_exit_callback_,
-          boost::asio::error::operation_aborted,
+          asio::error::operation_aborted,
           0));
 
     wait_exit_callback_ = NULL;
     }
 
-  boost::system::error_code ec2;
+  std::error_code ec2;
   sigchld_handler_.cancel(ec2);
   }
 
@@ -454,45 +457,46 @@ void process_handler_impl::close_pipe_write()
 
 //#############################################################################
 bool process_handler_impl::is_file_executable(const std::string& file,
-  boost::system::error_code& ec)
+  std::error_code& ec)
   {
   bool result = false;
   bool ret = false;
+  boost::system::error_code bec;
   boost::filesystem::path path(file);
 
   do
     {
     // Check if exist
-    ret = boost::filesystem::exists(path, ec);
-    if (!ret || ec)
+    ret = boost::filesystem::exists(path, bec);
+    if (!ret || bec)
       {
-      if (!ec)
+      if (!bec)
         {
-        ec.assign(ENOENT, boost::system::system_category());
+        ec.assign(ENOENT, std::system_category());
         }
 
       break;
       }
 
     // Check if directory
-    ret = boost::filesystem::is_directory(path, ec);
-    if (ret || ec)
+    ret = boost::filesystem::is_directory(path, bec);
+    if (ret || bec)
       {
-      if (!ec)
+      if (!bec)
         {
-        ec.assign(EISDIR, boost::system::system_category());
+        ec.assign(EISDIR, std::system_category());
         }
 
       break;
       }
 
     // Check if regular
-    ret = boost::filesystem::is_regular_file(path, ec);
-    if (!ret || ec)
+    ret = boost::filesystem::is_regular_file(path, bec);
+    if (!ret || bec)
       {
-      if (!ec)
+      if (!bec)
         {
-        ec.assign(ENOTSUP, boost::system::system_category());
+        ec.assign(ENOTSUP, std::system_category());
         }
 
       break;
@@ -501,7 +505,7 @@ bool process_handler_impl::is_file_executable(const std::string& file,
     // Check if executable
     if (access(file.data(), F_OK | X_OK) != 0)
       {
-      ec.assign(errno, boost::system::system_category());
+      ec.assign(errno, std::system_category());
       break;
       }
 

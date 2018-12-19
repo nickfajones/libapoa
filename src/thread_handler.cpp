@@ -9,6 +9,8 @@
 ###############################################################################
  */
 
+#include <system_error>
+
 #include "thread_handler.hpp"
 
 
@@ -49,7 +51,7 @@ thread_handler::thread_registration::~thread_registration()
 
 
 //#############################################################################
-thread_handler::thread_handler(boost::asio::io_service& io_service) :
+thread_handler::thread_handler(asio::io_service& io_service) :
   io_service_(io_service)
   {
   }
@@ -107,7 +109,7 @@ void thread_handler::create_thread(thread_callback handler)
     }
   catch (boost::thread_resource_error& err)
     {
-    boost::system::error_code ec(errno, boost::system::system_category());
+    std::error_code ec(errno, std::system_category());
 
     io_service_.post(
       boost::bind(handler, ec, boost::ref(io_service_)));
@@ -133,7 +135,7 @@ void thread_handler::on_thread_created(thread_registration* registration)
   registration->shutdown_countdown_ =
     APOA_CHILD_SHUTDOWN_COUNTDOWN_DEFAULT;
   registration->thread_io_service_ =
-    new boost::asio::io_service(1);
+    new asio::io_service(1);
 
   thread_registry_.do_on_thread_start(get_tenum(), registration);
 
@@ -147,13 +149,13 @@ void thread_handler::run_thread(thread_registration* registration)
   priv::per_thread_registry::thread_start();
 
   registration->thread_work_ =
-    new boost::asio::io_service::work(
+    new asio::io_service::work(
       *registration->thread_io_service_);
 
   registration->thread_io_service_->post(
     boost::bind(
       registration->start_handler_,
-        boost::system::error_code(),
+        std::error_code(),
         boost::ref(*registration->thread_io_service_)));
 
   registration->start_handler_ = NULL;
@@ -306,7 +308,7 @@ void thread_handler::join_thread(apoa::tenum_t tenum)
   }
 
 //#############################################################################
-boost::asio::io_service& thread_handler::get_io_service_tid(pid_t tid)
+asio::io_service& thread_handler::get_io_service_tid(pid_t tid)
   {
   tenum_t tenum(0);
 
@@ -318,7 +320,7 @@ boost::asio::io_service& thread_handler::get_io_service_tid(pid_t tid)
   return get_io_service(tenum);
   }
 
-boost::asio::io_service& thread_handler::get_io_service(tenum_t tenum)
+asio::io_service& thread_handler::get_io_service(tenum_t tenum)
   {
   return *thread_registry_.get(tenum).thread_io_service_;
   }

@@ -13,7 +13,9 @@
 #ifndef LIBAPOA_BASIC_SIGNAL_HANDLER_HPP
 #define LIBAPOA_BASIC_SIGNAL_HANDLER_HPP
 
-#include <boost/asio.hpp>
+#include <system_error>
+
+#include <asio.hpp>
 
 #include <libapoa/basic_signal_handler_siginfo.hpp>
 
@@ -24,11 +26,11 @@ namespace apoa
 //#############################################################################
 template <typename SignalService>
 class basic_signal_handler :
-    public boost::asio::basic_io_object<SignalService>
+    public asio::basic_io_object<SignalService>
   {
   public:
-    explicit basic_signal_handler(boost::asio::io_service& io_service) :
-      boost::asio::basic_io_object<SignalService>(io_service)
+    explicit basic_signal_handler(asio::io_service& io_service) :
+      asio::basic_io_object<SignalService>(io_service)
       {
       }
     
@@ -39,13 +41,13 @@ class basic_signal_handler :
   public:
     std::size_t cancel()
       {
-      boost::system::error_code ec;
+      std::error_code ec;
       std::size_t s = cancel(ec);
-      boost::asio::detail::throw_error(ec);
+      asio::detail::throw_error(ec);
       return s;
       }
     
-    std::size_t cancel(boost::system::error_code& ec)
+    std::size_t cancel(std::error_code& ec)
       {
       return this->get_service().cancel(this->get_implementation(), ec);
       }
@@ -53,12 +55,12 @@ class basic_signal_handler :
   public:
     void handle(int signum)
       {
-      boost::system::error_code ec;
+      std::error_code ec;
       handle(signum, ec);
-      boost::asio::detail::throw_error(ec);
+      asio::detail::throw_error(ec);
       }
     
-    void handle(int signum, boost::system::error_code& ec)
+    void handle(int signum, std::error_code& ec)
       {
       this->get_service().handle(this->get_implementation(), signum, ec);
       }

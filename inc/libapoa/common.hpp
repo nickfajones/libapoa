@@ -25,12 +25,12 @@
 #include <list>
 #include <set>
 
-#include <boost/asio.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
 #include <boost/function.hpp>
-#include <boost/system/error_code.hpp>
 #include <boost/thread.hpp>
+
+#include <asio.hpp>
 
 
 namespace apoa
@@ -206,16 +206,16 @@ void apoalogstdout(
 
 
 //#############################################################################
-boost::asio::io_service& get_process_io_service();
+asio::io_service& get_process_io_service();
 void shutdown_process(int retval = 0);
 
-boost::asio::io_service& get_io_service(apoa::tenum_t tenum = apoa::get_tenum());
+asio::io_service& get_io_service(apoa::tenum_t tenum = apoa::get_tenum());
 void shutdown_thread(apoa::tenum_t tenum = apoa::get_tenum(), int retval = 0);
 
-boost::asio::io_service& get_io_service(pid_t tid);
+asio::io_service& get_io_service(pid_t tid);
 void shutdown_thread(pid_t tid, int retval);
 
-boost::asio::io_service& get_thread_io_service();
+asio::io_service& get_thread_io_service();
 
 
 

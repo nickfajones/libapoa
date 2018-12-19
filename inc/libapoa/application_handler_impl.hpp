@@ -17,11 +17,12 @@
 
 #include <map>
 #include <memory>
+#include <system_error>
 
-#include <boost/asio.hpp>
 #include <boost/function.hpp>
 #include <boost/program_options.hpp>
-#include <boost/system/error_code.hpp>
+
+#include <asio.hpp>
 
 #include <libapoa/common.hpp>
 #include <libapoa/thread_handler.hpp>
@@ -35,7 +36,7 @@ class application_handler_impl :
     public std::enable_shared_from_this<application_handler_impl>
   {
   public:
-    explicit application_handler_impl(boost::asio::io_service& io_service) :
+    explicit application_handler_impl(asio::io_service& io_service) :
       thread_handler_(io_service),
       watchdog_timer_(io_service),
       watchdog_length_(0),
@@ -105,12 +106,12 @@ class application_handler_impl :
         seconds = 2;
         }
 
-      boost::system::error_code ec;
+      std::error_code ec;
       on_watchdog_timeout(ec);
       }
 
   private:
-    void on_watchdog_timeout(const boost::system::error_code& ec)
+    void on_watchdog_timeout(const std::error_code& ec)
       {
       if (ec)
         {
@@ -122,7 +123,7 @@ class application_handler_impl :
       watchdog_timer_.async_wait(
         boost::bind(
           &application_handler_impl::on_watchdog_timeout, shared_from_this(),
-        boost::asio::placeholders::error));
+        asio::placeholders::error));
 
       alarm(watchdog_length_);
       }
@@ -131,7 +132,7 @@ class application_handler_impl :
     thread_handler thread_handler_;
 
   private:
-    boost::asio::deadline_timer watchdog_timer_;
+    asio::deadline_timer watchdog_timer_;
     uint32_t watchdog_length_;
 
   private:

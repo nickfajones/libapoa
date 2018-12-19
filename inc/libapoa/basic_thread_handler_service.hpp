@@ -20,7 +20,7 @@ namespace apoa
 
 //#############################################################################
 class basic_thread_handler_service :
-    public boost::asio::detail::service_base<basic_thread_handler_service>
+    public asio::detail::service_base<basic_thread_handler_service>
   {
   public:
     typedef std::shared_ptr<apoa::thread_handler_impl>
@@ -28,7 +28,7 @@ class basic_thread_handler_service :
     
   public:
     explicit basic_thread_handler_service(
-      boost::asio::io_service& io_service);
+      asio::io_service& io_service);
     virtual ~basic_thread_handler_service();
     
   public:
@@ -37,19 +37,19 @@ class basic_thread_handler_service :
     void destroy(implementation_type& impl);
 
   public:
-    boost::asio::io_service& get_thread_io_service(
+    asio::io_service& get_thread_io_service(
       implementation_type& impl, pid_t tid);
 
     void create_thread(
       implementation_type& impl,
-      boost::asio::io_service& parent_io_service,
+      asio::io_service& parent_io_service,
       thread_callback cb);
     void shutdown_thread(
       implementation_type& impl, pid_t tid, int retval);
 
     void register_main_thread(
       implementation_type& impl,
-      boost::asio::io_service& process_io_service);
+      asio::io_service& process_io_service);
     void start_main_thread(
       implementation_type& impl, pid_t pid, thread_callback cb);
   };

@@ -102,22 +102,22 @@ std::set<tenum_t> per_thread_registry::thread_set_;
 
 
 //#############################################################################
-boost::asio::io_service& get_process_io_service()
+asio::io_service& get_process_io_service()
   {
   return thread_handler::get_io_service(0);
   }
 
-boost::asio::io_service& get_thread_io_service()
+asio::io_service& get_thread_io_service()
   {
   return thread_handler::get_io_service_tid(get_tid());
   }
 
-boost::asio::io_service& get_io_service(apoa::tenum_t tenum)
+asio::io_service& get_io_service(apoa::tenum_t tenum)
   {
   return thread_handler::get_io_service(tenum);
   }
 
-boost::asio::io_service& get_io_service(pid_t tid)
+asio::io_service& get_io_service(pid_t tid)
   {
   return thread_handler::get_io_service_tid(tid);
   }

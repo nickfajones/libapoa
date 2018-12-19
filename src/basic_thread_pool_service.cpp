@@ -10,6 +10,7 @@
 ###############################################################################
  */
 
+#include <system_error>
 
 #include <libapoa/basic_thread_pool_service.hpp>
 
@@ -19,8 +20,8 @@ namespace apoa
 
 //#############################################################################
 basic_thread_pool_service::basic_thread_pool_service(
-    boost::asio::io_service& io_service) :
-  boost::asio::detail::service_base<basic_thread_pool_service>(io_service)
+    asio::io_service& io_service) :
+  asio::detail::service_base<basic_thread_pool_service>(io_service)
   {
   }
 
@@ -45,7 +46,7 @@ void basic_thread_pool_service::destroy(implementation_type& impl)
 
 //#############################################################################
 void basic_thread_pool_service::create_pool(
-    implementation_type& impl, uint32_t size, boost::system::error_code& ec)
+    implementation_type& impl, uint32_t size, std::error_code& ec)
   {
   impl->create_pool(size, ec);
   }
@@ -57,8 +58,8 @@ void basic_thread_pool_service::destroy_pool(implementation_type& impl)
   }
 
 //#############################################################################
-boost::asio::io_service& basic_thread_pool_service::get_thread_service(
-    implementation_type& impl, boost::system::error_code& ec)
+asio::io_service& basic_thread_pool_service::get_thread_service(
+    implementation_type& impl, std::error_code& ec)
   {
   return impl->get_thread_service(ec);
   }

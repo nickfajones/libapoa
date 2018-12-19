@@ -13,8 +13,7 @@
 #define LIBAPOA_BASIC_THREAD_POOL_SERVICE_HPP
 
 #include <memory>
-
-#include <boost/asio.hpp>
+#include <system_error>
 
 #include <libapoa/basic_thread_pool_impl.hpp>
 
@@ -24,13 +23,13 @@ namespace apoa
 
 //#############################################################################
 class basic_thread_pool_service :
-    public boost::asio::detail::service_base<basic_thread_pool_service>
+    public asio::detail::service_base<basic_thread_pool_service>
   {
   public:
     typedef std::shared_ptr<basic_thread_pool_impl> implementation_type;
     
   public:
-    explicit basic_thread_pool_service(boost::asio::io_service& io_service);
+    explicit basic_thread_pool_service(asio::io_service& io_service);
     ~basic_thread_pool_service();
 
   public:
@@ -40,10 +39,10 @@ class basic_thread_pool_service :
 
   public:
     void create_pool(implementation_type& impl,
-      uint32_t size, boost::system::error_code& ec);
+      uint32_t size, std::error_code& ec);
     void destroy_pool(implementation_type& impl);
-    boost::asio::io_service& get_thread_service(
-      implementation_type& impl, boost::system::error_code& ec);
+    asio::io_service& get_thread_service(
+      implementation_type& impl, std::error_code& ec);
   };
 
 }; // namespace apoa

@@ -10,8 +10,9 @@
 ###############################################################################
  */
 
-#include <boost/system/error_code.hpp>
-#include <boost/asio.hpp>
+#include <system_error>
+
+#include <asio.hpp>
 
 #include "common.hpp"
 #include "application_handler.hpp"
@@ -25,8 +26,8 @@ namespace apoa
 
 //#############################################################################
 basic_signal_handler_service::basic_signal_handler_service(
-    boost::asio::io_service& io_service) :
-  boost::asio::detail::service_base<
+    asio::io_service& io_service) :
+  asio::detail::service_base<
     basic_signal_handler_service>(io_service)
   {
   }
@@ -54,7 +55,7 @@ void basic_signal_handler_service::destroy(implementation_type& impl)
 //#############################################################################
 std::size_t basic_signal_handler_service::cancel(
     implementation_type& impl,
-    boost::system::error_code& ec)
+    std::error_code& ec)
   {
   return impl->cancel(ec);
   }
@@ -63,7 +64,7 @@ std::size_t basic_signal_handler_service::cancel(
 void basic_signal_handler_service::handle(
     implementation_type& impl,
     int signum,
-    boost::system::error_code& ec)
+    std::error_code& ec)
   {
   if (is_process_thread())
     {
