@@ -76,9 +76,10 @@ void process_handler_impl::launch(
 
     // Create SIGCHLD signal handler
     sigchld_handler_.handle(SIGCHLD);
-    sigchld_handler_.async_wait(boost::bind(
+    sigchld_handler_.async_wait(std::bind(
       &process_handler_impl::sigchld_handle, shared_from_this(),
-      asio::placeholders::error, _2));
+      std::placeholders::_1,
+      std::placeholders::_2));
 
     // Create pipe
     create_pipe(pipe_one, pipe_two, ec);
@@ -365,7 +366,7 @@ void process_handler_impl::sigchld_handle(
     if (wait_exit_callback_ != NULL)
       {
       io_service_.post(
-        boost::bind(wait_exit_callback_, ec, sigint_info.bsi_status));
+        std::bind(wait_exit_callback_, ec, sigint_info.bsi_status));
 
       wait_exit_callback_ = NULL;
       }
@@ -389,9 +390,10 @@ void process_handler_impl::sigchld_handle(
   if (who_died == 0)
     {
     sigchld_handler_.handle(SIGCHLD);
-    sigchld_handler_.async_wait(boost::bind(
+    sigchld_handler_.async_wait(std::bind(
       &process_handler_impl::sigchld_handle, shared_from_this(),
-      asio::placeholders::error, _2));
+      std::placeholders::_1,
+      std::placeholders::_2));
 
     return;
     }
@@ -407,10 +409,10 @@ void process_handler_impl::sigchld_handle(
   if (wait_exit_callback_ != NULL)
     {
     io_service_.post(
-      boost::bind(wait_exit_callback_, new_ec, sigint_info.bsi_status));
+      std::bind(wait_exit_callback_, new_ec, sigint_info.bsi_status));
 
     io_service_.post(
-      boost::bind(
+      std::bind(
         wait_exit_callback_,
           asio::error::operation_aborted,
           0));

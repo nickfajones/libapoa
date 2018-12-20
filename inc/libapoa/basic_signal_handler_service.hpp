@@ -14,6 +14,7 @@
 
 #include <memory>
 #include <system_error>
+#include <functional>
 
 #include <asio.hpp>
 
@@ -39,7 +40,7 @@ class basic_signal_handler_service :
 #endif
     
   private:
-    typedef boost::function<
+    typedef std::function<
       void (const std::error_code&, struct basic_siginfo)>
         basic_signal_callback;
     
@@ -78,7 +79,7 @@ class basic_signal_handler_service :
         }
 
       apoa::get_process_io_service().post(
-        boost::bind(
+        std::bind(
           &signal_handler_base_impl::async_wait, impl.get(),
           h));
       }

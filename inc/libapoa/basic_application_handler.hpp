@@ -14,8 +14,6 @@
 
 #include <sys/types.h>
 
-#include <boost/bind.hpp>
-
 #include <asio.hpp>
 
 #include <libapoa/common.hpp>

@@ -14,6 +14,7 @@
 #define LIBAPOA_PROCESS_HANDLER_IMPL_HPP
 
 #include <system_error>
+#include <functional>
 
 #include <libapoa/signal_handler.hpp>
 
@@ -28,14 +29,14 @@ class process_handler_impl :
     public std::enable_shared_from_this<process_handler_impl>
   {
   public:
-    typedef boost::function<
+    typedef std::function<
         void (const std::error_code&,
               apoa::basic_process_context::status_type)>
       basic_process_exit_callback;
-    typedef boost::function<
+    typedef std::function<
         void (const std::error_code&, std::size_t)>
       async_pipe_read_callback;
-    typedef boost::function<
+    typedef std::function<
         void (const std::error_code&, std::size_t)>
       async_pipe_write_callback;
     
@@ -68,11 +69,11 @@ class process_handler_impl :
       async_reading_ = true;
       read_descriptor_.async_read_some(
         buffer,
-        boost::bind(
+        std::bind(
           &process_handler_impl::async_pipe_read_handle,
             shared_from_this(),
-            asio::placeholders::error,
-            asio::placeholders::bytes_transferred,
+            std::placeholders::_1,
+            std::placeholders::_2,
             handler));
       }
     
@@ -88,12 +89,12 @@ class process_handler_impl :
       async_writing_ = true;
       write_descriptor_.async_write_some(
         buffer,
-          boost::bind(
-            &process_handler_impl::async_pipe_write_handle,
-              shared_from_this(),
-              asio::placeholders::error,
-              asio::placeholders::bytes_transferred,
-              handler));
+        std::bind(
+          &process_handler_impl::async_pipe_write_handle,
+            shared_from_this(),
+            std::placeholders::_1,
+            std::placeholders::_2,
+            handler));
       }
     
   public:

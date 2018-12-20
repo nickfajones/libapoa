@@ -13,8 +13,7 @@
 #define LIBAPOA_THREAD_HANDLER_TYPES_HPP
 
 #include <system_error>
-
-#include <boost/function.hpp>
+#include <functional>
 
 #include <asio.hpp>
 
@@ -23,7 +22,7 @@ namespace apoa
 {
 
 //#############################################################################
-typedef boost::function<
+typedef std::function<
   void (const std::error_code&, asio::io_service&)> thread_callback;
 
 }; // namespace apoa

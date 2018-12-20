@@ -17,9 +17,6 @@
 
 #include <map>
 
-#include <boost/bind.hpp>
-#include <boost/function.hpp>
-
 #include <asio.hpp>
 
 #include <libapoa/common.hpp>

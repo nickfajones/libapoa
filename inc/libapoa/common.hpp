@@ -24,11 +24,10 @@
 
 #include <list>
 #include <set>
+#include <functional>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
-#include <boost/function.hpp>
-#include <boost/bind.hpp>
 
 #include <asio.hpp>
 
@@ -234,7 +233,7 @@ class per_thread_registry
     friend class apoa::thread_handler;
 
   private:
-    typedef boost::function<void (void)> per_thread_index_callback;
+    typedef std::function<void (void)> per_thread_index_callback;
     typedef std::map<int32_t, per_thread_index_callback>
       per_thread_index_callback_map;
 
@@ -316,10 +315,10 @@ class per_thread_index : public priv::per_thread_registry
 
       thread_start_callbacks_.insert(
         std::make_pair(
-          id_, boost::bind(&per_thread_index<T>::on_thread_start, this)));
+          id_, std::bind(&per_thread_index<T>::on_thread_start, this)));
       thread_finish_callbacks_.insert(
         std::make_pair(
-          id_, boost::bind(&per_thread_index<T>::on_thread_finish, this)));
+          id_, std::bind(&per_thread_index<T>::on_thread_finish, this)));
 
       for (std::set<tenum_t>::iterator itr =
              thread_set_.begin();

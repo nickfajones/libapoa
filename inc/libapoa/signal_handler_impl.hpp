@@ -17,10 +17,9 @@
 
 #include <memory>
 #include <system_error>
+#include <functional>
 
 #include <boost/noncopyable.hpp>
-#include <boost/function.hpp>
-#include <boost/bind.hpp>
 
 #include <asio.hpp>
 
@@ -41,7 +40,7 @@ class signal_handler_base_impl :
     friend class sigaction_handler;
     
   protected:
-    typedef boost::function<
+    typedef std::function<
       void (const std::error_code&, struct basic_siginfo)>
         basic_signal_callback;
     

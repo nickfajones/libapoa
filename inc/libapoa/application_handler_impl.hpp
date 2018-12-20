@@ -18,8 +18,8 @@
 #include <map>
 #include <memory>
 #include <system_error>
+#include <functional>
 
-#include <boost/function.hpp>
 #include <boost/program_options.hpp>
 
 #include <asio.hpp>
@@ -121,9 +121,9 @@ class application_handler_impl :
       watchdog_timer_.expires_from_now(
           boost::posix_time::seconds(watchdog_length_/2));
       watchdog_timer_.async_wait(
-        boost::bind(
+        std::bind(
           &application_handler_impl::on_watchdog_timeout, shared_from_this(),
-        asio::placeholders::error));
+          std::placeholders::_1));
 
       alarm(watchdog_length_);
       }

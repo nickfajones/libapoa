@@ -11,9 +11,7 @@
 #include <string>
 #include <memory>
 #include <system_error>
-
-#include <boost/function.hpp>
-#include <boost/bind.hpp>
+#include <functional>
 
 #include <asio.hpp>
 
@@ -51,7 +49,7 @@ class myapp : public std::enable_shared_from_this<myapp>
       assert(!ec);
 
       std::shared_ptr<myapp> app(new myapp(io_service));
-      io_service.post(boost::bind(&myapp::start, app));
+      io_service.post(std::bind(&myapp::start, app));
       }
 
     void start()
@@ -60,17 +58,17 @@ class myapp : public std::enable_shared_from_this<myapp>
 
       sigint_handler_.handle(SIGINT);
       sigint_handler_.async_wait(
-        boost::bind(
+        std::bind(
           &myapp::on_sigint, shared_from_this(),
-          asio::placeholders::error,
-          _2));
+          std::placeholders::_1,
+          std::placeholders::_2));
 
       timer_.expires_from_now(
         boost::posix_time::seconds(5));
       timer_.async_wait(
-        boost::bind(
+        std::bind(
           &myapp::on_timeout, shared_from_this(),
-          asio::placeholders::error));
+          std::placeholders::_1));
       }
 
   public:
@@ -101,17 +99,17 @@ class myapp : public std::enable_shared_from_this<myapp>
         }
 
       process_handler_.async_wait_exit(
-        boost::bind(
+        std::bind(
           &myapp::on_child_exit, shared_from_this(),
-          asio::placeholders::error,
-          _2));
+          std::placeholders::_1,
+          std::placeholders::_2));
 
       process_handler_.async_pipe_read(
         asio::buffer(buffer_.data(), buffer_.size() - 1),
-        boost::bind(
+        std::bind(
           &myapp::on_child_read, shared_from_this(),
-          asio::placeholders::error,
-          _2));
+          std::placeholders::_1,
+          std::placeholders::_2));
       }
 
   public:
@@ -134,10 +132,10 @@ class myapp : public std::enable_shared_from_this<myapp>
 
       process_handler_.async_pipe_read(
         asio::buffer(buffer_.data(), buffer_.size() - 1),
-        boost::bind(
+        std::bind(
           &myapp::on_child_read, shared_from_this(),
-          asio::placeholders::error,
-          _2));
+          std::placeholders::_1,
+          std::placeholders::_2));
       }
 
   public:
@@ -205,7 +203,10 @@ int main(int argc, char** argv)
   app_handler.process_init(desc, argc, argv);
 
   int retval = app_handler.process_start(
-    boost::bind(&myapp::process_start, _1, _2));
+    std::bind(
+      &myapp::process_start,
+      std::placeholders::_1,
+      std::placeholders::_2));
 
   alarm(0);
 

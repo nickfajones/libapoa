@@ -106,12 +106,12 @@ void thread_handler::create_thread(thread_callback handler)
     {
     registration->system_thread_ =
       new std::thread(
-        boost::bind(&on_thread_created, registration));
+        std::bind(&on_thread_created, registration));
     }
   catch (std::error_code& ec)
     {
     io_service_.post(
-      boost::bind(handler, ec, boost::ref(io_service_)));
+      std::bind(handler, ec, boost::ref(io_service_)));
     }
   }
 
@@ -152,7 +152,7 @@ void thread_handler::run_thread(thread_registration* registration)
       *registration->thread_io_service_);
 
   registration->thread_io_service_->post(
-    boost::bind(
+    std::bind(
       registration->start_handler_,
         std::error_code(),
         boost::ref(*registration->thread_io_service_)));
@@ -173,7 +173,7 @@ void thread_handler::run_thread(thread_registration* registration)
       thread_registry_.get(0);
 
     process_registration.thread_io_service_->post(
-      boost::bind(&join_thread, get_tenum()));
+      std::bind(&join_thread, get_tenum()));
     }
 
   priv::per_thread_registry::thread_finish();
@@ -200,7 +200,7 @@ void thread_handler::shutdown_thread(tenum_t tenum, int retval)
   if (tenum != get_tenum())
     {
     registration.thread_io_service_->post(
-      boost::bind(&shutdown_thread, tenum, retval));
+      std::bind(&shutdown_thread, tenum, retval));
 
     return;
     }
@@ -251,7 +251,7 @@ void thread_handler::shutdown_thread(tenum_t tenum, int retval)
     child_registration.is_shutdown_started_ = true;
 
     child_registration.thread_io_service_->post(
-      boost::bind(&shutdown_thread_initial, *itr));
+      std::bind(&shutdown_thread_initial, *itr));
     }
   }
 
@@ -266,7 +266,7 @@ void thread_handler::shutdown_thread_initial(apoa::tenum_t tenum)
   if (--registration.shutdown_countdown_ > 0)
     {
     registration.thread_io_service_->post(
-      boost::bind(&shutdown_thread_initial, tenum));
+      std::bind(&shutdown_thread_initial, tenum));
 
     return;
     }

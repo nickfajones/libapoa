@@ -74,8 +74,9 @@ void basic_signal_handler_service::handle(
     }
 
   apoa::get_process_io_service().post(
-    boost::bind(
-      &signal_handler_base_impl::handle, impl.get(),
+    std::bind(
+      static_cast<void (signal_handler_base_impl::*)(int)>(
+        &signal_handler_base_impl::handle), impl.get(),
       signum));
   }
 

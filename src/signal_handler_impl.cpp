@@ -22,10 +22,9 @@
 #include <map>
 #include <memory>
 #include <system_error>
+#include <functional>
 
 #include <boost/noncopyable.hpp>
-#include <boost/function.hpp>
-#include <boost/bind.hpp>
 
 #include <asio.hpp>
 
@@ -110,11 +109,11 @@ void signal_handler_base_impl::sigaction_handler::init()
   signal_descriptor_.assign(descriptor);
   signal_descriptor_.async_read_some(
     asio::buffer(signal_descriptor_buffer_),
-    boost::bind(
+    std::bind(
       &signal_handler_base_impl::sigaction_handler::on_descriptor_read,
       shared_from_this(),
-      asio::placeholders::error,
-      asio::placeholders::bytes_transferred));
+      std::placeholders::_1,
+      std::placeholders::_2));
   }
 
 //#############################################################################
@@ -174,7 +173,7 @@ void signal_handler_base_impl::sigaction_handler::on_descriptor_read(
       std::error_code ec2;
 
       request->io_service_.post(
-        boost::bind(request->callback_, ec2, *bsi));
+        std::bind(request->callback_, ec2, *bsi));
 
       request->callback_ = NULL;
       request->active_ = false;
@@ -193,11 +192,11 @@ void signal_handler_base_impl::sigaction_handler::on_descriptor_read(
     asio::buffer(
       reinterpret_cast<char*>(signal_descriptor_buffer_) + buffer_end_,
       (sizeof(struct basic_siginfo) * 64) - buffer_end_),
-    boost::bind(
+    std::bind(
       &signal_handler_base_impl::sigaction_handler::on_descriptor_read,
       shared_from_this(),
-      asio::placeholders::error,
-      asio::placeholders::bytes_transferred));
+      std::placeholders::_1,
+      std::placeholders::_2));
 
   unblock_signals();
   }
@@ -237,7 +236,7 @@ std::size_t signal_handler_base_impl::cancel(std::error_code& ec)
   else
     {
     apoa::get_process_io_service().post(
-      boost::bind(
+      std::bind(
         &signal_handler_base_impl::async_unhandle, shared_from_this()));
     }
 
@@ -250,7 +249,7 @@ std::size_t signal_handler_base_impl::cancel(std::error_code& ec)
   std::error_code ec2 = asio::error::operation_aborted;
   struct basic_siginfo bsi;
 
-  io_service_.post(boost::bind(callback_, ec2, bsi));
+  io_service_.post(std::bind(callback_, ec2, bsi));
 
   callback_ = NULL;
   active_ = false;

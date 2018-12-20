@@ -11,6 +11,7 @@
  */
 
 #include <system_error>
+#include <functional>
 
 #include <libapoa/basic_thread_pool_impl.hpp>
 
@@ -51,9 +52,9 @@ void basic_thread_pool_impl::create_pool(
   for (uint32_t i = 0; i < size; i++)
     {
     thread_handler_.create_thread(
-      boost::bind(
+      std::bind(
         &basic_thread_pool_impl::on_thread_created, shared_from_this(),
-          asio::placeholders::error, _2));
+          std::placeholders::_1, std::placeholders::_2));
     }
   }
 
