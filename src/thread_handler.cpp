@@ -34,7 +34,7 @@ thread_handler::thread_registration::thread_registration() :
   retval_(0),
   start_handler_(NULL),
   system_thread_(NULL),
-  thread_io_service_(NULL),
+  thread_io_context_(NULL),
   thread_work_(NULL),
   is_process_(false),
   is_shutdown_started_(false),
@@ -45,15 +45,15 @@ thread_handler::thread_registration::thread_registration() :
 thread_handler::thread_registration::~thread_registration()
   {
   thread_work_ = NULL;
-  thread_io_service_ = NULL;
+  thread_io_context_ = NULL;
   system_thread_ = NULL;
   }
 
 
 
 //#############################################################################
-thread_handler::thread_handler(asio::io_service& io_service) :
-  io_service_(io_service)
+thread_handler::thread_handler(asio::io_context& io_context) :
+  io_context_(io_context)
   {
   }
 
@@ -77,7 +77,7 @@ int thread_handler::start_main_thread(thread_callback handler)
   registration->shutdown_countdown_ =
     APOA_PROCESS_SHUTDOWN_COUNTDOWN_DEFAULT;
   registration->start_handler_ = handler;
-  registration->thread_io_service_ = &io_service_;
+  registration->thread_io_context_ = &io_context_;
   registration->is_process_ = true;
 
   thread_registry_.do_on_thread_start(get_tenum(), registration);
@@ -110,8 +110,8 @@ void thread_handler::create_thread(thread_callback handler)
     }
   catch (std::error_code& ec)
     {
-    io_service_.post(
-      std::bind(handler, ec, boost::ref(io_service_)));
+    io_context_.post(
+      std::bind(handler, ec, boost::ref(io_context_)));
     }
   }
 
@@ -133,8 +133,8 @@ void thread_handler::on_thread_created(thread_registration* registration)
   registration->tid_ = get_tid();
   registration->shutdown_countdown_ =
     APOA_CHILD_SHUTDOWN_COUNTDOWN_DEFAULT;
-  registration->thread_io_service_ =
-    new asio::io_service(1);
+  registration->thread_io_context_ =
+    new asio::io_context(1);
 
   thread_registry_.do_on_thread_start(get_tenum(), registration);
 
@@ -148,31 +148,31 @@ void thread_handler::run_thread(thread_registration* registration)
   priv::per_thread_registry::thread_start();
 
   registration->thread_work_ =
-    new asio::io_service::work(
-      *registration->thread_io_service_);
+    new asio::io_context::work(
+      *registration->thread_io_context_);
 
-  registration->thread_io_service_->post(
+  registration->thread_io_context_->post(
     std::bind(
       registration->start_handler_,
         std::error_code(),
-        boost::ref(*registration->thread_io_service_)));
+        boost::ref(*registration->thread_io_context_)));
 
   registration->start_handler_ = NULL;
 
-  registration->thread_io_service_->run();
+  registration->thread_io_context_->run();
 
   delete registration->thread_work_;
   registration->thread_work_ = NULL;
 
   if (!registration->is_process_)
     {
-    delete registration->thread_io_service_;
-    registration->thread_io_service_ = NULL;
+    delete registration->thread_io_context_;
+    registration->thread_io_context_ = NULL;
 
     thread_registration& process_registration =
       thread_registry_.get(0);
 
-    process_registration.thread_io_service_->post(
+    process_registration.thread_io_context_->post(
       std::bind(&join_thread, get_tenum()));
     }
 
@@ -199,7 +199,7 @@ void thread_handler::shutdown_thread(tenum_t tenum, int retval)
 
   if (tenum != get_tenum())
     {
-    registration.thread_io_service_->post(
+    registration.thread_io_context_->post(
       std::bind(&shutdown_thread, tenum, retval));
 
     return;
@@ -250,7 +250,7 @@ void thread_handler::shutdown_thread(tenum_t tenum, int retval)
     child_registration.retval_ = retval;
     child_registration.is_shutdown_started_ = true;
 
-    child_registration.thread_io_service_->post(
+    child_registration.thread_io_context_->post(
       std::bind(&shutdown_thread_initial, *itr));
     }
   }
@@ -265,13 +265,13 @@ void thread_handler::shutdown_thread_initial(apoa::tenum_t tenum)
 
   if (--registration.shutdown_countdown_ > 0)
     {
-    registration.thread_io_service_->post(
+    registration.thread_io_context_->post(
       std::bind(&shutdown_thread_initial, tenum));
 
     return;
     }
 
-  registration.thread_io_service_->stop();
+  registration.thread_io_context_->stop();
   }
 
 void thread_handler::join_thread(apoa::tenum_t tenum)
@@ -307,7 +307,7 @@ void thread_handler::join_thread(apoa::tenum_t tenum)
   }
 
 //#############################################################################
-asio::io_service& thread_handler::get_io_service_tid(pid_t tid)
+asio::io_context& thread_handler::get_io_context_tid(pid_t tid)
   {
   tenum_t tenum(0);
 
@@ -316,11 +316,11 @@ asio::io_service& thread_handler::get_io_service_tid(pid_t tid)
   tenum = tid_tenum_map_.find(tid)->second;
   }
 
-  return get_io_service(tenum);
+  return get_io_context(tenum);
   }
 
-asio::io_service& thread_handler::get_io_service(tenum_t tenum)
+asio::io_context& thread_handler::get_io_context(tenum_t tenum)
   {
-  return *thread_registry_.get(tenum).thread_io_service_;
+  return *thread_registry_.get(tenum).thread_io_context_;
   }
 }; // namespace apoa

@@ -29,15 +29,15 @@ class basic_signal_handler :
     public asio::basic_io_object<SignalService>
   {
   public:
-    explicit basic_signal_handler(asio::io_service& io_service) :
-      asio::basic_io_object<SignalService>(io_service)
+    explicit basic_signal_handler(asio::io_context& io_context) :
+      asio::basic_io_object<SignalService>(io_context)
       {
       }
-    
+
     ~basic_signal_handler()
       {
       }
-    
+
   public:
     std::size_t cancel()
       {
@@ -46,12 +46,12 @@ class basic_signal_handler :
       asio::detail::throw_error(ec);
       return s;
       }
-    
+
     std::size_t cancel(std::error_code& ec)
       {
       return this->get_service().cancel(this->get_implementation(), ec);
       }
-    
+
   public:
     void handle(int signum)
       {
@@ -59,12 +59,12 @@ class basic_signal_handler :
       handle(signum, ec);
       asio::detail::throw_error(ec);
       }
-    
+
     void handle(int signum, std::error_code& ec)
       {
       this->get_service().handle(this->get_implementation(), signum, ec);
       }
-    
+
   public:
     template <typename NotificationHandler>
     void async_wait(NotificationHandler handler)

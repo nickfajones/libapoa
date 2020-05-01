@@ -26,9 +26,9 @@ namespace apoa
 
 //#############################################################################
 basic_signal_handler_service::basic_signal_handler_service(
-    asio::io_service& io_service) :
+    asio::io_context& io_context) :
   asio::detail::service_base<
-    basic_signal_handler_service>(io_service)
+    basic_signal_handler_service>(io_context)
   {
   }
 
@@ -43,7 +43,7 @@ void basic_signal_handler_service::shutdown_service()
 
 void basic_signal_handler_service::construct(implementation_type& impl)
   {
-  impl.reset(new implementation_subtype(get_io_service()));
+  impl.reset(new implementation_subtype(get_io_context()));
   }
 
 void basic_signal_handler_service::destroy(implementation_type& impl)
@@ -73,7 +73,7 @@ void basic_signal_handler_service::handle(
     return;
     }
 
-  apoa::get_process_io_service().post(
+  apoa::get_process_io_context().post(
     std::bind(
       static_cast<void (signal_handler_base_impl::*)(int)>(
         &signal_handler_base_impl::handle), impl.get(),

@@ -27,13 +27,13 @@ class basic_thread_pool :
     public asio::basic_io_object<basic_thread_pool_service>
   {
   public:
-    explicit basic_thread_pool(asio::io_service& io_service);
+    explicit basic_thread_pool(asio::io_context& io_context);
     ~basic_thread_pool();
 
   public:
     void create_pool(uint32_t size, std::error_code& ec);
     void destroy_pool();
-    asio::io_service& get_thread_service(
+    asio::io_context& get_thread_service(
       std::error_code& ec);
   };
 

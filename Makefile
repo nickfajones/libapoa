@@ -65,7 +65,7 @@ else
 $(error target ${ARCH} not supported)
 endif
 
-base_CFLAGS     = -Wall -fPIC -pthread -std=gnu++0x $(CFLAGS)
+base_CFLAGS     = -Wall -fPIC -pthread $(CFLAGS)
 dev_CFLAGS      = $(base_CFLAGS) -Werror
 build_CFLAGS    = $(base_CFLAGS)
 

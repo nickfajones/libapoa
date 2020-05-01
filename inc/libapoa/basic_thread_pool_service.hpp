@@ -27,9 +27,9 @@ class basic_thread_pool_service :
   {
   public:
     typedef std::shared_ptr<basic_thread_pool_impl> implementation_type;
-    
+
   public:
-    explicit basic_thread_pool_service(asio::io_service& io_service);
+    explicit basic_thread_pool_service(asio::io_context& io_context);
     ~basic_thread_pool_service();
 
   public:
@@ -41,7 +41,7 @@ class basic_thread_pool_service :
     void create_pool(implementation_type& impl,
       uint32_t size, std::error_code& ec);
     void destroy_pool(implementation_type& impl);
-    asio::io_service& get_thread_service(
+    asio::io_context& get_thread_service(
       implementation_type& impl, std::error_code& ec);
   };
 

@@ -31,25 +31,24 @@ class basic_process_handler_service :
   {
   public:
     typedef std::shared_ptr<process_handler_impl> implementation_type;
-    
+
   public:
-    explicit basic_process_handler_service(
-        asio::io_service& io_service);
+    explicit basic_process_handler_service(asio::io_context& io_context);
     virtual ~basic_process_handler_service();
-    
+
   public:
     virtual void shutdown_service();
     void construct(implementation_type& impl);
     void destroy(implementation_type& impl);
-    
+
   public:
     void cancel(
       implementation_type& impl, std::error_code& ec);
-    
+
     void launch(
       implementation_type& impl,
       basic_process_context& context, std::error_code& ec);
-    
+
     void exec(
       implementation_type& impl,
       basic_process_context& context, std::error_code& ec);

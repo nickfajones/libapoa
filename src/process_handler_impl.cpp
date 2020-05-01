@@ -28,11 +28,11 @@ namespace apoa
 
 //#############################################################################
 process_handler_impl::process_handler_impl(
-    asio::io_service& io_service) :
-  io_service_(io_service),
-  read_descriptor_(io_service),
-  write_descriptor_(io_service),
-  sigchld_handler_(io_service),
+    asio::io_context& io_context) :
+  io_context_(io_context),
+  read_descriptor_(io_context),
+  write_descriptor_(io_context),
+  sigchld_handler_(io_context),
   wait_exit_callback_(NULL),
   child_active_(false),
   async_reading_(false),
@@ -89,7 +89,7 @@ void process_handler_impl::launch(
       }
 
     // Do fork
-    io_service_.notify_fork(asio::io_service::fork_prepare);
+    io_context_.notify_fork(asio::io_context::fork_prepare);
     child_pid = fork();
 
     // Child process of fork
@@ -107,7 +107,7 @@ void process_handler_impl::launch(
       }
 
     // Parent process
-    io_service_.notify_fork(asio::io_service::fork_parent);
+    io_context_.notify_fork(asio::io_context::fork_parent);
 
     // Assign context with child process id
     context_.handle(child_pid);
@@ -365,7 +365,7 @@ void process_handler_impl::sigchld_handle(
 
     if (wait_exit_callback_ != NULL)
       {
-      io_service_.post(
+      io_context_.post(
         std::bind(wait_exit_callback_, ec, sigint_info.bsi_status));
 
       wait_exit_callback_ = NULL;
@@ -408,10 +408,10 @@ void process_handler_impl::sigchld_handle(
   // Call child process exit callback
   if (wait_exit_callback_ != NULL)
     {
-    io_service_.post(
+    io_context_.post(
       std::bind(wait_exit_callback_, new_ec, sigint_info.bsi_status));
 
-    io_service_.post(
+    io_context_.post(
       std::bind(
         wait_exit_callback_,
           asio::error::operation_aborted,

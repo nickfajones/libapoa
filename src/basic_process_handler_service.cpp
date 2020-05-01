@@ -23,9 +23,9 @@ namespace apoa
 
 //#############################################################################
 basic_process_handler_service::basic_process_handler_service(
-    asio::io_service& io_service) :
+    asio::io_context& io_context) :
   asio::detail::service_base<
-    basic_process_handler_service>(io_service)
+    basic_process_handler_service>(io_context)
   {
   }
 
@@ -40,7 +40,7 @@ void basic_process_handler_service::shutdown_service()
 
 void basic_process_handler_service::construct(implementation_type& impl)
   {
-  impl.reset(new implementation_type::element_type(get_io_service()));
+  impl.reset(new implementation_type::element_type(get_io_context()));
   }
 
 void basic_process_handler_service::destroy(implementation_type& impl)

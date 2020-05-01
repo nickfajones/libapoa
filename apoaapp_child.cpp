@@ -10,6 +10,7 @@
 
 #include <string>
 #include <memory>
+#include <chrono>
 #include <system_error>
 #include <functional>
 
@@ -25,11 +26,11 @@
 class myapp : public std::enable_shared_from_this<myapp>
   {
   public:
-    explicit myapp(asio::io_service& io_service) :
-      io_service_(io_service),
-      sigint_handler_(io_service),
-      process_handler_(io_service),
-      timer_(io_service)
+    explicit myapp(asio::io_context& io_context) :
+      io_context_(io_context),
+      sigint_handler_(io_context),
+      process_handler_(io_context),
+      timer_(io_context)
       {
       APOA_PRINT("myapp::myapp");
       }
@@ -44,12 +45,12 @@ class myapp : public std::enable_shared_from_this<myapp>
   public:
     static void process_start(
         const std::error_code& ec,
-        asio::io_service& io_service)
+        asio::io_context& io_context)
       {
       assert(!ec);
 
-      std::shared_ptr<myapp> app(new myapp(io_service));
-      io_service.post(std::bind(&myapp::start, app));
+      std::shared_ptr<myapp> app(new myapp(io_context));
+      io_context.post(std::bind(&myapp::start, app));
       }
 
     void start()
@@ -63,8 +64,7 @@ class myapp : public std::enable_shared_from_this<myapp>
           std::placeholders::_1,
           std::placeholders::_2));
 
-      timer_.expires_from_now(
-        boost::posix_time::seconds(5));
+      timer_.expires_from_now(std::chrono::seconds(5));
       timer_.async_wait(
         std::bind(
           &myapp::on_timeout, shared_from_this(),
@@ -179,13 +179,13 @@ class myapp : public std::enable_shared_from_this<myapp>
       }
 
   private:
-    asio::io_service& io_service_;
+    asio::io_context& io_context_;
 
     apoa::signal_handler sigint_handler_;
 
     apoa::process_handler process_handler_;
 
-    asio::deadline_timer timer_;
+    asio::steady_timer timer_;
 
     std::array<char, 1025> buffer_;
   };
@@ -197,8 +197,8 @@ int main(int argc, char** argv)
   desc.add_options()
     ("help", "");
 
-  asio::io_service io_service;
-  apoa::application_handler app_handler(io_service);
+  asio::io_context io_context;
+  apoa::application_handler app_handler(io_context);
 
   app_handler.process_init(desc, argc, argv);
 

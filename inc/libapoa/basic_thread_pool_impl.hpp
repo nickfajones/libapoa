@@ -28,22 +28,22 @@ class basic_thread_pool_impl :
     public std::enable_shared_from_this<basic_thread_pool_impl>
   {
   private:
-    typedef std::map<pid_t, asio::io_service&> threads_map;
+    typedef std::map<pid_t, asio::io_context&> threads_map;
 
   public:
-    explicit basic_thread_pool_impl(asio::io_service& io_service);
+    explicit basic_thread_pool_impl(asio::io_context& io_context);
     ~basic_thread_pool_impl();
 
   public:
     void create_pool(uint32_t size, std::error_code& ec);
     void destroy_pool();
-    asio::io_service& get_thread_service(
+    asio::io_context& get_thread_service(
       std::error_code& ec);
 
   private:
     void on_thread_created(
       const std::error_code& ec,
-      asio::io_service& io_service);
+      asio::io_context& io_context);
 
   private:
     thread_handler thread_handler_;

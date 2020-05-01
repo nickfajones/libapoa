@@ -21,8 +21,8 @@ namespace apoa
 
 //#############################################################################
 basic_thread_pool_impl::basic_thread_pool_impl(
-    asio::io_service& io_service) :
-  thread_handler_(io_service),
+    asio::io_context& io_context) :
+  thread_handler_(io_context),
   pool_(),
   iter_(pool_.end()),
   pool_size_(0)
@@ -61,7 +61,7 @@ void basic_thread_pool_impl::create_pool(
 //#############################################################################
 void basic_thread_pool_impl::on_thread_created(
     const std::error_code& ec,
-    asio::io_service& io_service)
+    asio::io_context& io_context)
   {
   if (ec)
     {
@@ -78,7 +78,7 @@ void basic_thread_pool_impl::on_thread_created(
   BOOST_ASSERT(pool_.find(tid) == pool_.end() &&
     "basic_thread_pool_impl: create existing thread id");
 
-  pool_.insert(std::make_pair(tid, boost::ref(io_service)));
+  pool_.insert(std::make_pair(tid, boost::ref(io_context)));
   }
 
 //#############################################################################
@@ -96,7 +96,7 @@ void basic_thread_pool_impl::destroy_pool()
   }
 
 //#############################################################################
-asio::io_service& basic_thread_pool_impl::get_thread_service(
+asio::io_context& basic_thread_pool_impl::get_thread_service(
     std::error_code& ec)
   {
   std::lock_guard<std::mutex> pool_lock(pool_mutex_);
@@ -112,7 +112,7 @@ asio::io_service& basic_thread_pool_impl::get_thread_service(
       ec.assign(ENODATA, std::system_category());
       }
 
-    return thread_handler_.get_io_service();
+    return thread_handler_.get_io_context();
     }
 
   if (iter_ == pool_.end())

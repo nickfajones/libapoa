@@ -53,8 +53,8 @@ class thread_handler
         std::thread* system_thread_;
 
       public:
-        asio::io_service* thread_io_service_;
-        asio::io_service::work* thread_work_;
+        asio::io_context* thread_io_context_;
+        asio::io_context::work* thread_work_;
 
       public:
         bool is_process_;
@@ -63,7 +63,7 @@ class thread_handler
       };
 
   public:
-    explicit thread_handler(asio::io_service& io_service);
+    explicit thread_handler(asio::io_context& io_context);
     ~thread_handler();
 
   public:
@@ -83,9 +83,9 @@ class thread_handler
     static void join_thread(apoa::tenum_t tenum);
 
   public:
-    static asio::io_service& get_io_service_tid(
+    static asio::io_context& get_io_context_tid(
       pid_t tid = get_tid());
-    static asio::io_service& get_io_service(
+    static asio::io_context& get_io_context(
       tenum_t tenum = get_tenum());
 
   private:
@@ -96,7 +96,7 @@ class thread_handler
     static std::map<pid_t, tenum_t> tid_tenum_map_;
 
   private:
-    asio::io_service& io_service_;
+    asio::io_context& io_context_;
   };
 
 }; // namespace apoa

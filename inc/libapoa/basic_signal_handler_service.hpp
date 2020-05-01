@@ -38,39 +38,39 @@ class basic_signal_handler_service :
 #else
     typedef posix_signal_handler_impl implementation_subtype;
 #endif
-    
+
   private:
     typedef std::function<
       void (const std::error_code&, struct basic_siginfo)>
         basic_signal_callback;
-    
+
   public:
     explicit basic_signal_handler_service(
-      asio::io_service& io_service);
+      asio::io_context& io_context);
     virtual ~basic_signal_handler_service();
-    
+
   public:
     virtual void shutdown_service();
     void construct(implementation_type& impl);
     void destroy(implementation_type& impl);
-    
+
   public:
     std::size_t cancel(
       implementation_type& impl,
       std::error_code& ec);
-    
+
     void handle(
       implementation_type& impl,
       int signum,
       std::error_code& ec);
-    
+
     template <typename NotificationHandler>
     void async_wait(
         implementation_type& impl,
         NotificationHandler handler)
       {
       basic_signal_callback h = handler;
-      
+
       if (is_process_thread())
         {
         impl->async_wait(h);
@@ -78,7 +78,7 @@ class basic_signal_handler_service :
         return;
         }
 
-      apoa::get_process_io_service().post(
+      apoa::get_process_io_context().post(
         std::bind(
           &signal_handler_base_impl::async_wait, impl.get(),
           h));

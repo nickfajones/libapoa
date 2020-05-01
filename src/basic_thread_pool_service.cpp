@@ -20,8 +20,8 @@ namespace apoa
 
 //#############################################################################
 basic_thread_pool_service::basic_thread_pool_service(
-    asio::io_service& io_service) :
-  asio::detail::service_base<basic_thread_pool_service>(io_service)
+    asio::io_context& io_context) :
+  asio::detail::service_base<basic_thread_pool_service>(io_context)
   {
   }
 
@@ -36,7 +36,7 @@ void basic_thread_pool_service::shutdown_service()
 
 void basic_thread_pool_service::construct(implementation_type& impl)
   {
-  impl.reset(new implementation_type::element_type(get_io_service()));
+  impl.reset(new implementation_type::element_type(get_io_context()));
   }
 
 void basic_thread_pool_service::destroy(implementation_type& impl)
@@ -58,7 +58,7 @@ void basic_thread_pool_service::destroy_pool(implementation_type& impl)
   }
 
 //#############################################################################
-asio::io_service& basic_thread_pool_service::get_thread_service(
+asio::io_context& basic_thread_pool_service::get_thread_service(
     implementation_type& impl, std::error_code& ec)
   {
   return impl->get_thread_service(ec);

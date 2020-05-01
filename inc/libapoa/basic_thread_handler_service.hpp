@@ -25,31 +25,31 @@ class basic_thread_handler_service :
   public:
     typedef std::shared_ptr<apoa::thread_handler_impl>
       implementation_type;
-    
+
   public:
     explicit basic_thread_handler_service(
-      asio::io_service& io_service);
+      asio::io_context& io_context);
     virtual ~basic_thread_handler_service();
-    
+
   public:
     virtual void shutdown_service();
     void construct(implementation_type& impl);
     void destroy(implementation_type& impl);
 
   public:
-    asio::io_service& get_thread_io_service(
+    asio::io_context& get_thread_io_context(
       implementation_type& impl, pid_t tid);
 
     void create_thread(
       implementation_type& impl,
-      asio::io_service& parent_io_service,
+      asio::io_context& parent_io_context,
       thread_callback cb);
     void shutdown_thread(
       implementation_type& impl, pid_t tid, int retval);
 
     void register_main_thread(
       implementation_type& impl,
-      asio::io_service& process_io_service);
+      asio::io_context& process_io_context);
     void start_main_thread(
       implementation_type& impl, pid_t pid, thread_callback cb);
   };

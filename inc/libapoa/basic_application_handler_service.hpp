@@ -28,10 +28,10 @@ class basic_application_handler_service :
 
   public:
     explicit basic_application_handler_service(
-        asio::io_service& io_service) :
+        asio::io_context& io_context) :
       asio::detail::service_base<
-        basic_application_handler_service>(io_service),
-      io_service_(io_service)
+        basic_application_handler_service>(io_context),
+      io_context_(io_context)
       {
       }
     virtual ~basic_application_handler_service()
@@ -44,7 +44,7 @@ class basic_application_handler_service :
       }
     void construct(implementation_type& impl)
       {
-      impl.reset(new application_handler_impl(io_service_));
+      impl.reset(new application_handler_impl(io_context_));
       }
     void destroy(implementation_type& impl)
       {
@@ -83,7 +83,7 @@ class basic_application_handler_service :
       }
 
   private:
-    asio::io_service& io_service_;
+    asio::io_context& io_context_;
   };
 
 }; // namespace apoa

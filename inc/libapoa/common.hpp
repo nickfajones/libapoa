@@ -24,6 +24,7 @@
 
 #include <list>
 #include <set>
+#include <map>
 #include <functional>
 
 #include <boost/algorithm/string.hpp>
@@ -205,16 +206,16 @@ void apoalogstdout(
 
 
 //#############################################################################
-asio::io_service& get_process_io_service();
+asio::io_context& get_process_io_context();
 void shutdown_process(int retval = 0);
 
-asio::io_service& get_io_service(apoa::tenum_t tenum = apoa::get_tenum());
+asio::io_context& get_io_context(apoa::tenum_t tenum = apoa::get_tenum());
 void shutdown_thread(apoa::tenum_t tenum = apoa::get_tenum(), int retval = 0);
 
-asio::io_service& get_io_service(pid_t tid);
+asio::io_context& get_io_context(pid_t tid);
 void shutdown_thread(pid_t tid, int retval);
 
-asio::io_service& get_thread_io_service();
+asio::io_context& get_thread_io_context();
 
 
 

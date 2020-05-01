@@ -30,8 +30,8 @@ class basic_process_handler :
     public asio::basic_io_object<ProcessService>
   {
   public:
-    explicit basic_process_handler(asio::io_service& io_service) :
-      asio::basic_io_object<ProcessService>(io_service)
+    explicit basic_process_handler(asio::io_context& io_context) :
+      asio::basic_io_object<ProcessService>(io_context)
       {
       }
 

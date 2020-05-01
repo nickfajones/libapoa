@@ -30,22 +30,22 @@ class thread_handler_impl
   {
   private:
     class thread_registration;
-    
+
   public:
     thread_handler_impl();
     ~thread_handler_impl();
 
   public:
-    void register_main_thread(asio::io_service& process_io_service);
+    void register_main_thread(asio::io_context& process_io_context);
     void start_main_thread(pid_t pid, thread_callback handler);
 
     void create_thread(
-      asio::io_service& parent_io_service,
+      asio::io_context& parent_io_context,
       thread_callback handler);
 
     void shutdown_thread(pid_t tid, int retval);
-    
-    asio::io_service& get_io_service(pid_t tid);
+
+    asio::io_context& get_io_context(pid_t tid);
 
   private:
     void insert_thread(
@@ -59,10 +59,10 @@ class thread_handler_impl
       std::shared_ptr<thread_registration> registration);
     void shutdown_thread2(
       std::shared_ptr<thread_registration> registration);
-      
+
   private:
     std::mutex threads_mutex_;
-    
+
     std::map<
       pid_t,
       std::shared_ptr<thread_registration> > threads_;

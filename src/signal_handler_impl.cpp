@@ -82,8 +82,8 @@ bool signal_handler_base_impl::sigaction_key::operator<(
 
 //#############################################################################
 signal_handler_base_impl::sigaction_handler::sigaction_handler(
-    asio::io_service& io_service) :
-  signal_descriptor_(io_service),
+    asio::io_context& io_context) :
+  signal_descriptor_(io_context),
   buffer_end_(0)
   {
   }
@@ -172,7 +172,7 @@ void signal_handler_base_impl::sigaction_handler::on_descriptor_read(
 
       std::error_code ec2;
 
-      request->io_service_.post(
+      request->io_context_.post(
         std::bind(request->callback_, ec2, *bsi));
 
       request->callback_ = NULL;
@@ -205,9 +205,9 @@ void signal_handler_base_impl::sigaction_handler::on_descriptor_read(
 
 //#############################################################################
 signal_handler_base_impl::signal_handler_base_impl(
-    asio::io_service& io_service) :
+    asio::io_context& io_context) :
   signum_(0),
-  io_service_(io_service),
+  io_context_(io_context),
   active_(false)
   {
   }
@@ -235,7 +235,7 @@ std::size_t signal_handler_base_impl::cancel(std::error_code& ec)
     }
   else
     {
-    apoa::get_process_io_service().post(
+    apoa::get_process_io_context().post(
       std::bind(
         &signal_handler_base_impl::async_unhandle, shared_from_this()));
     }
@@ -249,7 +249,7 @@ std::size_t signal_handler_base_impl::cancel(std::error_code& ec)
   std::error_code ec2 = asio::error::operation_aborted;
   struct basic_siginfo bsi;
 
-  io_service_.post(std::bind(callback_, ec2, bsi));
+  io_context_.post(std::bind(callback_, ec2, bsi));
 
   callback_ = NULL;
   active_ = false;
@@ -283,7 +283,7 @@ void signal_handler_base_impl::handle(
     if (_signal_handlers.size() == 1)
       {
       create_sigaction_handler(
-        apoa::get_process_io_service(),
+        apoa::get_process_io_context(),
         _sigaction_handler);
       _sigaction_handler->init();
       }
@@ -371,8 +371,8 @@ sigset_t _posix_process_blockset;
 
 //#############################################################################
 posix_signal_handler_impl::posix_sigaction_handler::posix_sigaction_handler(
-    asio::io_service& io_service) :
-  signal_handler_base_impl::sigaction_handler(io_service)
+    asio::io_context& io_context) :
+  signal_handler_base_impl::sigaction_handler(io_context)
   {
   sigprocmask(0, NULL, &_posix_process_blockset);
   sigaddset(&_posix_process_blockset, SIGPIPE);
@@ -438,8 +438,8 @@ void posix_signal_handler_impl::posix_sigaction_handler::unblock_signals()
 
 //#############################################################################
 posix_signal_handler_impl::posix_signal_handler_impl(
-    asio::io_service& io_service) :
-  signal_handler_base_impl(io_service)
+    asio::io_context& io_context) :
+  signal_handler_base_impl(io_context)
   {
   }
 
@@ -449,10 +449,10 @@ posix_signal_handler_impl::~posix_signal_handler_impl()
 
 //#############################################################################
 void posix_signal_handler_impl::create_sigaction_handler(
-    asio::io_service& io_service,
+    asio::io_context& io_context,
     std::shared_ptr<sigaction_handler>& handler)
   {
-  handler.reset(new posix_sigaction_handler(io_service));
+  handler.reset(new posix_sigaction_handler(io_context));
   }
 
 //#############################################################################
@@ -534,8 +534,8 @@ sigset_t _signalfd_process_sigset;
 
 //#############################################################################
 signalfd_signal_handler_impl::signalfd_sigaction_handler::signalfd_sigaction_handler(
-    asio::io_service& io_service) :
-  signal_handler_base_impl::sigaction_handler(io_service)
+    asio::io_context& io_context) :
+  signal_handler_base_impl::sigaction_handler(io_context)
   {
   pthread_sigmask(SIG_SETMASK, NULL, &_signalfd_process_sigset);
   }
@@ -577,8 +577,8 @@ void signalfd_signal_handler_impl::signalfd_sigaction_handler::unblock_signals()
 
 //#############################################################################
 signalfd_signal_handler_impl::signalfd_signal_handler_impl(
-    asio::io_service& io_service) :
-  signal_handler_base_impl(io_service)
+    asio::io_context& io_context) :
+  signal_handler_base_impl(io_context)
   {
   }
 
@@ -588,10 +588,10 @@ signalfd_signal_handler_impl::~signalfd_signal_handler_impl()
 
 //#############################################################################
 void signalfd_signal_handler_impl::create_sigaction_handler(
-    asio::io_service& io_service,
+    asio::io_context& io_context,
     std::shared_ptr<sigaction_handler>& handler)
   {
-  handler.reset(new signalfd_sigaction_handler(io_service));
+  handler.reset(new signalfd_sigaction_handler(io_context));
   }
 
 //#############################################################################

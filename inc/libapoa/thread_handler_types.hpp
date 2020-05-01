@@ -23,7 +23,7 @@ namespace apoa
 
 //#############################################################################
 typedef std::function<
-  void (const std::error_code&, asio::io_service&)> thread_callback;
+  void (const std::error_code&, asio::io_context&)> thread_callback;
 
 }; // namespace apoa
 

@@ -29,15 +29,15 @@ class basic_thread_handler :
     friend class application_handler_impl;
 
   public:
-    explicit basic_thread_handler(asio::io_service& io_service);
+    explicit basic_thread_handler(asio::io_context& io_context);
     ~basic_thread_handler();
-    
+
   public:
     void create_thread(thread_callback cb);
     void shutdown_thread(pid_t tid, int retval);
 
   private:
-    void register_main_thread(asio::io_service& process_io_service);
+    void register_main_thread(asio::io_context& process_io_context);
     void start_main_thread(pid_t pid, thread_callback cb);
   };
 

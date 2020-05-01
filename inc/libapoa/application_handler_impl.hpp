@@ -36,9 +36,9 @@ class application_handler_impl :
     public std::enable_shared_from_this<application_handler_impl>
   {
   public:
-    explicit application_handler_impl(asio::io_service& io_service) :
-      thread_handler_(io_service),
-      watchdog_timer_(io_service),
+    explicit application_handler_impl(asio::io_context& io_context) :
+      thread_handler_(io_context),
+      watchdog_timer_(io_context),
       watchdog_length_(0),
       process_retval_(0),
       is_started_(false)
@@ -119,7 +119,7 @@ class application_handler_impl :
         }
 
       watchdog_timer_.expires_from_now(
-          boost::posix_time::seconds(watchdog_length_/2));
+          std::chrono::seconds(watchdog_length_/2));
       watchdog_timer_.async_wait(
         std::bind(
           &application_handler_impl::on_watchdog_timeout, shared_from_this(),
@@ -132,7 +132,7 @@ class application_handler_impl :
     thread_handler thread_handler_;
 
   private:
-    asio::deadline_timer watchdog_timer_;
+    asio::steady_timer watchdog_timer_;
     uint32_t watchdog_length_;
 
   private:

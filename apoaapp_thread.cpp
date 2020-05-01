@@ -11,6 +11,7 @@
 
 #include <string>
 #include <memory>
+#include <chrono>
 #include <system_error>
 #include <functional>
 
@@ -26,10 +27,10 @@
 class mythread : public std::enable_shared_from_this<mythread>
   {
   public:
-    explicit mythread(asio::io_service& io_service) :
+    explicit mythread(asio::io_context& io_context) :
       m_tenum(apoa::get_tenum()),
-      timer_(io_service)
-      //sigusr1_handler_(io_service)
+      timer_(io_context)
+      //sigusr1_handler_(io_context)
       {
       APOA_PRINT("mythread::mythread");
       }
@@ -55,8 +56,7 @@ class mythread : public std::enable_shared_from_this<mythread>
       {
       APOA_PRINT("mythread::start_timer");
 
-      timer_.expires_from_now(
-        boost::posix_time::seconds(5));
+      timer_.expires_from_now(std::chrono::seconds(5));
       timer_.async_wait(
         std::bind(
           &mythread::on_timeout, shared_from_this(),
@@ -82,8 +82,7 @@ class mythread : public std::enable_shared_from_this<mythread>
 
       APOA_PRINT("mythread::on_timeout");
 
-      timer_.expires_from_now(
-        boost::posix_time::seconds(5));
+      timer_.expires_from_now(std::chrono::seconds(5));
       timer_.async_wait(
         std::bind(
           &mythread::on_timeout, shared_from_this(),
@@ -108,7 +107,7 @@ class mythread : public std::enable_shared_from_this<mythread>
 */
   private:
     apoa::tenum_t m_tenum;
-    asio::deadline_timer timer_;
+    asio::steady_timer timer_;
 
     //apoa::signal_handler sigusr1_handler_;
   };
@@ -119,13 +118,13 @@ class mythread : public std::enable_shared_from_this<mythread>
 class myapp : public std::enable_shared_from_this<myapp>
   {
   public:
-    explicit myapp(asio::io_service& io_service) :
-      io_service_(io_service),
-      timer_(io_service),
-      thread_handler_(io_service),
-      sigint_handler_(io_service),
-      sigusr1_handler_(io_service),
-      sigusr2_handler_(io_service),
+    explicit myapp(asio::io_context& io_context) :
+      io_context_(io_context),
+      timer_(io_context),
+      thread_handler_(io_context),
+      sigint_handler_(io_context),
+      sigusr1_handler_(io_context),
+      sigusr2_handler_(io_context),
       threads__starting_(0),
       threads__max_(3)
       {
@@ -142,12 +141,12 @@ class myapp : public std::enable_shared_from_this<myapp>
   public:
     static void process_start(
         const std::error_code& ec,
-        asio::io_service& io_service)
+        asio::io_context& io_context)
       {
       assert(!ec);
 
-      std::shared_ptr<myapp> app(new myapp(io_service));
-      io_service.post(std::bind(&myapp::start, app));
+      std::shared_ptr<myapp> app(new myapp(io_context));
+      io_context.post(std::bind(&myapp::start, app));
       }
 
     void start()
@@ -175,8 +174,7 @@ class myapp : public std::enable_shared_from_this<myapp>
           std::placeholders::_1,
           std::placeholders::_2));
 
-      timer_.expires_from_now(
-        boost::posix_time::seconds(5));
+      timer_.expires_from_now(std::chrono::seconds(5));
       timer_.async_wait(
         std::bind(
           &myapp::on_timeout, shared_from_this(),
@@ -191,14 +189,14 @@ class myapp : public std::enable_shared_from_this<myapp>
 
     void on_thread_start(
         const std::error_code& ec,
-        asio::io_service& io_service)
+        asio::io_context& io_context)
       {
       assert(!ec);
 
-      std::shared_ptr<mythread> thread(new mythread(io_service));
+      std::shared_ptr<mythread> thread(new mythread(io_context));
       thread->start_timer();
 
-      io_service_.post(
+      io_context_.post(
         std::bind(&myapp::on_thread_started, shared_from_this(), thread));
       }
 
@@ -227,8 +225,7 @@ class myapp : public std::enable_shared_from_this<myapp>
             std::placeholders::_2));
         }
 
-      timer_.expires_from_now(
-        boost::posix_time::seconds(5));
+      timer_.expires_from_now(std::chrono::seconds(5));
       timer_.async_wait(
         std::bind(
           &myapp::on_timeout, shared_from_this(),
@@ -297,9 +294,9 @@ class myapp : public std::enable_shared_from_this<myapp>
       }
 
   private:
-    asio::io_service& io_service_;
+    asio::io_context& io_context_;
 
-    asio::deadline_timer timer_;
+    asio::steady_timer timer_;
 
     apoa::thread_handler thread_handler_;
 
@@ -320,8 +317,8 @@ int main(int argc, char** argv)
   desc.add_options()
     ("help", "");
 
-  asio::io_service io_service;
-  apoa::application_handler app_handler(io_service);
+  asio::io_context io_context;
+  apoa::application_handler app_handler(io_context);
 
   app_handler.process_init(desc, argc, argv);
 

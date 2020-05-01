@@ -39,24 +39,24 @@ class process_handler_impl :
     typedef std::function<
         void (const std::error_code&, std::size_t)>
       async_pipe_write_callback;
-    
+
   public:
-    explicit process_handler_impl(asio::io_service& io_service);
+    explicit process_handler_impl(asio::io_context& io_context);
     ~process_handler_impl();
-    
+
   public:
     void launch(
       basic_process_context& context, std::error_code& ec);
     void exec(
       basic_process_context& context, std::error_code& ec);
-    
+
     void cancel(std::error_code& ec);
     void signal(
       basic_process_context::signal_type signal_code,
       std::error_code& ec);
-    
+
     void async_wait_exit(basic_process_exit_callback callback);
-    
+
     template <typename MutableBuffer>
     void async_pipe_read(
       MutableBuffer buffer, async_pipe_read_callback handler)
@@ -65,7 +65,7 @@ class process_handler_impl :
         {
         return;
         }
-      
+
       async_reading_ = true;
       read_descriptor_.async_read_some(
         buffer,
@@ -76,7 +76,7 @@ class process_handler_impl :
             std::placeholders::_2,
             handler));
       }
-    
+
     template <typename ConstBuffer>
     void async_pipe_write(
       ConstBuffer buffer, async_pipe_write_callback handler)
@@ -85,7 +85,7 @@ class process_handler_impl :
         {
         return;
         }
-      
+
       async_writing_ = true;
       write_descriptor_.async_write_some(
         buffer,
@@ -96,42 +96,42 @@ class process_handler_impl :
             std::placeholders::_2,
             handler));
       }
-    
+
   public:
     void cancel_pipe_read();
     void cancel_pipe_write();
     void close_pipe_read();
     void close_pipe_write();
-    
+
   private:
     bool is_file_executable(const std::string& file,
       std::error_code& ec);
-    
+
     void create_pipe(int pipe_one[], int pipe_two[],
       std::error_code& ec);
     void exec_in_child(int pipe_one[], int pipe_two[]);
-    
+
     void async_pipe_read_handle(
       const std::error_code& ec, std::size_t bytes_transferred,
       async_pipe_read_callback handler);
     void async_pipe_write_handle(
       const std::error_code& ec, std::size_t bytes_transferred,
       async_pipe_write_callback handler);
-    
+
     void sigchld_handle(const std::error_code& ec,
       apoa::siginfo sigint_info);
-    
+
   private:
-    asio::io_service& io_service_;
-    
+    asio::io_context& io_context_;
+
     asio::posix::stream_descriptor read_descriptor_;
     asio::posix::stream_descriptor write_descriptor_;
-    
+
     signal_handler sigchld_handler_;
-    
+
     basic_process_context context_;
     basic_process_exit_callback wait_exit_callback_;
-    
+
     bool child_active_;
     bool async_reading_;
     bool async_writing_;

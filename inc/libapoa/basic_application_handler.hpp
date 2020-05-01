@@ -30,8 +30,8 @@ class basic_application_handler :
   {
   public:
     explicit basic_application_handler(
-        asio::io_service& io_service) :
-      asio::basic_io_object<basic_application_handler_service>(io_service)
+        asio::io_context& io_context) :
+      asio::basic_io_object<basic_application_handler_service>(io_context)
       {
       }
     ~basic_application_handler()
